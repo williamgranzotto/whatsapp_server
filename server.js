@@ -5,48 +5,178 @@ const bodyParser = require('body-parser');
 const SockJS = require('sockjs-client');
 const Stomp = require('stompjs');
 
+//init whatsapp web
+//const qrcode = require('qrcode-terminal');
+const { Client } = require('whatsapp-web.js');
+
+//global variables
+let client = null;
+let socket = null;
+let stompClient = null;
+//const endpoint = 'https://chefsuite.com.br/chat';
+const endpoint = 'http://localhost:5000/chat';
+let email = null;
+
 app.use(express.static('public'));
 app.use(bodyParser.json());
 
-// create a Nexmo client
-// create a Nexmo client
-const Nexmo = require('nexmo');
-const nexmo = new Nexmo({
-  apiKey: '67141185',
-  apiSecret: 'f84iQpRvb3KdI2WG',
-  applicationId: '6e6125a4-55d1-4f11-a13c-168840584141',
-  privateKey: '-----BEGIN PRIVATE KEY-----MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCIQzkZZPy4/OgIQrjdPLjTeHsVIxzcA7legJBRoJEmwSNFK+aN9a3jM9BP0oMBz/2TiI0oR3UCHvlQfqSIq1QVoQG+4VNJx6icUeBvok36x/Gj3V79s19R7QgS7sFwYy5tHBLB2JHjvsFAkbVhw/Tx5FF4z0s6TeWXwJnwyY3vOu37CCoYMQsBbu5O1J1vpohSUlotH4fV9UK6zxBFlT0qtCpr87t0Crrq4W/PXehEzydbmcnftj/l9DcY2Xig41sK5l9U5hZoAjW95MCa/MRpgcq5Mf5uqZ0AS9NEI+lsCJJHHGOPGTkvJlLXVdlJwMohGh3shoe1Wpre24mL6B9tAgMBAAECggEALVriyJcan6Bew1EiI1Gw24LAxTpYwsriipgUcXcWmWW0DbQdG6do57U5YzhYruPCLbdH9N5EDh6tMaPVtEACzug2oohxpp80ekOuhrnpZs3imn52vc9UrPpOs66Q6I26yEqN28PwW3QE8y8Mxqvo/hLXI3UsPw3qm+ZZ1xHfkn74mxD/QVa4BCPeCldt3XV2DTJbRCxAtkWIayLX8UNUFINTpsOSdNrmomOTXpHaYP4tFcdzhRPRgqxPB225Qinl6mn3VzFVT3aF+t+aQJuJhM9jYtZJ6dnBrsW965Z7C3fjrqZeEKRwd+PgQWXyawpGa9DnGQPA/lYpnqicFNH6aQKBgQC9O8XYnP1iaOUB1Ma4drXWvts8Fwzig3gRMiYImPwevExug1TzVjziqVcBq7M8SCIH23yfL35DQfBH5/TKu1J/raJPeKgPqdHegp48GqXQdA8uxyRRswaloEN1DC551rmCElhMxSaOOa7PvZoVeCzBYXmBeixPJac8a7kM6mcBfwKBgQC4Vu8z/15ELRbRq5WsNW7tZXT/62hsKe2QuZs3XcpefGanBK1p0+ai5BN7MAWKgdhbJCXJ9R1FESKLUwLy80JqUtKU7aBjWc36ySPcZfvoJhG9yc3fDbIWU8+bTGW869wKhQ9sTlHCiyNvytIumdN7qYyIVTb3l5LKnmOuWXh9EwKBgBCM/czoTjEhQ4ZZedgAaf8SSlKDIZleLk4yuKjf2I1Hote3nOJ7lG+up/F5dv+6v184jznNCZoQVlezrfFdWOXZ5exVfT2BeN2hRv2yxvXocLuCp2aN5fLuhXfjTN1TLn515EsyoyClYujAiI2AKUnwoJP2f5GclXfvZAwBJGk5AoGAV6gfPx6j+M9oFnP9TFJsWT7xj/ClSyn06ekYwg87eAq31ZwHylcVSUgja2S+fcqY014xCgQg0wL+5jmnIVhDsMOJl4AX0KaXqDWVc+ybCR1xOkqINxUQJkXcZwDBMEEH9YioeNwVTOlVBIfxwm8rfZZ2WS4MYVgWWXtP80xgWzkCgYB2uS34HgaGrbNA+puTa3c4SEQqP5DxJ5D39O+pZAreLCiNc5MoPi+weRO74cKYpVU+vgPNR41zhQ3fLWU596BpIA8oJj5h/YyfL5gBAt8tNsmBltwu4CZF9gqm9UxyBVsUwaAyiol0bkKi5R7JmtdesXexaKo6WMDxpotHx0yiFA==-----END PRIVATE KEY-----' 
-}, {
-  apiHost: 'messages-sandbox.nexmo.com'
-});
+// Add headers
+app.use(function (req, res, next) {
 
-// when someone messages the number linked to this app, this endpoint "answers"
-app.post('/answer', function (req, res) {
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');
+
+    // Request methods you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    // Request headers you wish to allow
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+    // Set to true if you need the website to include cookies in the requests sent
+    // to the API (e.g. in case you use sessions)
+    res.setHeader('Access-Control-Allow-Credentials', true);
+
+    // Pass to next layer of middleware
+    next();
+});
 	
-    let from = req.body.from.number.split(" ").join("").replace("+", "").replace("(", "").replace("}", "").replace("-", "");
-	let to = req.body.to.number.split(" ").join("").replace("+", "").replace("(", "").replace("}", "").replace("-", "");
-	let message = req.body.message.content.text;
-	let endpoint = 'https://chefsuite.com.br/chat';
-	//let endpoint = 'http://localhost:5000/chat';
+// init application
+app.post('/init', function (req, res) {
+
+	let data = '';
 	
-	let socket = new SockJS(endpoint);
-    let stompClient = Stomp.over(socket);
+    req.on('data', chunk => {
+		data += chunk;
+    });
+	
+    req.on('end', () => {
+		email = JSON.parse(data).email;
+		console.log(email);
+		res.end();
+    });
+	
+	socket = new SockJS(endpoint);
+    stompClient = Stomp.over(socket);
+
 	stompClient.connect({}, function (frame) {
-    
-	stompClient.send("/app/chat/" + to + "-" + from, {},
-        JSON.stringify({ 'from': from, 'to': to, 'message': message, 'whatsappMessageType': 'INBOUND' }));
-	
+
+		client = new Client();
+		
+		initClient();
+
 	});
 	
-  res.status(204).end();
-
+	res.status(204).end();
+	
 });
 
-// this endpoint receives information about events in the app
-app.post('/event', function (req, res) {
+function initClient(){
+	
+	//init QRCode
+	client.on('qr', qr => {
+    
+		stompClient.send("/app/chat/qr-" + email, {},
+			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
+	
+	});
 
-  res.status(204).end();
+	//when QRCode read
+	client.on('ready', async () => {
+		console.log('Client is ready!');
+	
+		stompClient.send("/app/chat/ready-" + email, {},
+			JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'READY' }));
+		
+		let room = '/topic/messages/sendmessage-' + email;
+	
+		stompClient.subscribe(room, function (messageOutput) {
 
-});
+			let json = JSON.parse(messageOutput.body);
+		
+			let number = json.to;
+			number = number.includes('@c.us') ? number : `${number}@c.us`;
+        
+			client.sendMessage(number, json.message);
+
+		});
+	
+    });
+	
+	//on message received
+	client.on('message', async msg => {
+		console.log('MESSAGE RECEIVED', await client.info.wid.use);
+		
+		let pic = null;
+		
+		let socket = new SockJS(endpoint);
+		let stompClient = Stomp.over(socket);
+		
+		(async () => {
+			
+			pic = await client.getProfilePicUrl(msg.from);
+		
+        })();
+
+        stompClient.connect({}, function (frame) {
+    
+	    setTimeout(function(){
+		    stompClient.send("/app/chat/sendmessage-" + email, {},
+			JSON.stringify({ 'from': email, 'to': msg.from.split("@")[0], 'message': msg.body, 'whatsappMessageType': 'INBOUND', 
+			'whatsappImageUrl': pic }));
+		
+		}, 1000);
+		
+		});
+		
+		if (msg.body === '!mention') {
+			const contact = await msg.getContact();
+			const chat = await msg.getChat();
+			chat.sendMessage(`Hi @${contact.number}!`, {
+				mentions: [contact]
+			});
+		} else if (msg.body === '!delete') {
+			if (msg.hasQuotedMsg) {
+				const quotedMsg = await msg.getQuotedMessage();
+				if (quotedMsg.fromMe) {
+					quotedMsg.delete(true);
+				} else {
+					msg.reply('I can only delete my own messages');
+				}
+			}
+		} else if (msg.body === '!pin') {
+			const chat = await msg.getChat();
+			await chat.pin();
+		} else if (msg.body === '!archive') {
+			const chat = await msg.getChat();
+			await chat.archive();
+		} else if (msg.body === '!mute') {
+			const chat = await msg.getChat();
+			// mute the chat for 20 seconds
+			const unmuteDate = new Date();
+			unmuteDate.setSeconds(unmuteDate.getSeconds() + 20);
+			await chat.mute(unmuteDate);
+		} else if (msg.body === '!typing') {
+			const chat = await msg.getChat();
+			// simulates typing in the chat
+			chat.sendStateTyping();
+		} else if (msg.body === '!recording') {
+			const chat = await msg.getChat();
+			// simulates recording audio in the chat
+			chat.sendStateRecording();
+		} else if (msg.body === '!clearstate') {
+			const chat = await msg.getChat();
+			// stops typing or recording in the chat
+			chat.clearState();
+		} else if (msg.body === '!jumpto') {
+			if (msg.hasQuotedMsg) {
+				const quotedMsg = await msg.getQuotedMessage();
+				client.interface.openChatWindowAt(quotedMsg.id._serialized);
+			}
+		}
+	});
+
+	client.initialize();
+
+}
 
 app.listen(8080);
