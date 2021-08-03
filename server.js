@@ -16,6 +16,7 @@ let stompClient = null;
 //const endpoint = 'https://chefsuite.com.br/chat';
 const endpoint = 'http://localhost:5000/chat';
 let email = null;
+let contactsJson = null;
 
 app.use(express.static('public'));
 app.use(bodyParser.json());
@@ -70,6 +71,44 @@ app.post('/init', function (req, res) {
 	
 });
 
+async function loadCustomers() {
+	
+	let contacts = await client.getContacts();
+		
+		contactsJson = "[";
+		
+		let i = 0;
+		for (var key in contacts) {
+			// skip loop if the property is from prototype
+			if (!contacts.hasOwnProperty(key)) continue;
+
+			var obj = contacts[key];
+	
+			let pic = await client.getProfilePicUrl(obj.id._serialized);
+    
+			contactsJson += "{'contact':{'pushname':'" + obj.pushname + "','number':'" + obj.number + "','isGroup':'" + obj.isGroup 
+			+ "','isWAContact':'"+ obj.isWAContact +  "','pic':'"+ pic + "'}},";
+				
+			i++;
+			if(i == 5){
+				
+			break;
+				
+			}
+	
+		}
+	
+		contactsJson = contactsJson.substring(0, contactsJson.length - 1);
+		contactsJson += "]";
+		
+		console.log(contactsJson);
+		
+		stompClient.send("/app/chat/savecustomers" + email, {},
+		JSON.stringify({ 'from': email, 'to': "", 'message': "", 'whatsappMessageType': 'SAVE_CUSTOMERS', 
+		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': contactsJson }));
+	
+}
+
 function initClient(){
 	
 	//init QRCode
@@ -83,11 +122,24 @@ function initClient(){
 	//when QRCode read
 	client.on('ready', async () => {
 		console.log('Client is ready!');
-	
-		stompClient.send("/app/chat/ready-" + email, {},
-			JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'READY' }));
 		
-		let room = '/topic/messages/sendmessage-' + email;
+		let room = '/topic/messages/loadcustomers-' + email;
+	
+		stompClient.subscribe(room, function (messageOutput) {
+			
+			loadCustomers();
+		
+		});
+		
+		let pic = await client.getProfilePicUrl(client.info.wid.user);
+
+        let pushname = await client.info.pushname;
+			
+		stompClient.send("/app/chat/ready-" + email, {},
+		JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'READY', 
+		'whatsappImageUrl': pic, 'whatsappPushname': pushname, 'contactsJson': contactsJson }));
+		
+		room = '/topic/messages/sendmessage-' + email;
 	
 		stompClient.subscribe(room, function (messageOutput) {
 
