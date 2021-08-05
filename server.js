@@ -143,12 +143,12 @@ function initClient(){
 	
 		stompClient.subscribe(room, function (messageOutput) {
 
-			let json = JSON.parse(messageOutput.body);
+			//let json = JSON.parse(messageOutput.body);
 		
-			let number = json.to;
-			number = number.includes('@c.us') ? number : `${number}@c.us`;
+			//let number = json.to;
+			//number = number.includes('@c.us') ? number : `${number}@c.us`;
         
-			client.sendMessage(number, json.message);
+			//client.sendMessage(number, json.message);
 
 		});
 	
@@ -226,9 +226,33 @@ function initClient(){
 			}
 		}
 	});
+	
+	client.on('message_ack', (msg, ack) => {
+    
+	console.log(ack);
+	
+	/*
+        == ACK VALUES ==
+        ACK_ERROR: -1
+        ACK_PENDING: 0
+        ACK_SERVER: 1
+        ACK_DEVICE: 2
+        ACK_READ: 3
+        ACK_PLAYED: 4
+    */
+
+    if(ack == 3) {
+		
+        stompClient.send("/app/chat/messageread-" + email, {},
+		JSON.stringify({ 'from': msg.id.remote.split('@')[0], 'to': "", 'message': "", 'whatsappMessageType': 'READ', 
+		'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
+    }
+});
 
 	client.initialize();
 
 }
+
+
 
 app.listen(8080);
