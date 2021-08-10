@@ -14,7 +14,7 @@ let client = null;
 let socket = null;
 let stompClient = null;
 
-const endpoint = 'http://54.232.249.45/chat';
+const endpoint = 'http://chefsuite.com.br/chat';
 //const endpoint = 'http://localhost:5000/chat';
 let email = null;
 let contactsJson = null;
@@ -26,7 +26,7 @@ app.use(bodyParser.json());
 app.use(function (req, res, next) {
 
     // Website you wish to allow to connect
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
     // Request methods you wish to allow
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
