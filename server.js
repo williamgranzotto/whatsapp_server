@@ -13,8 +13,8 @@ const { Client } = require('whatsapp-web.js');
 let client = null;
 let socket = null;
 let stompClient = null;
-//const endpoint = 'https://chefsuite.com.br/chat';
-const endpoint = 'http://localhost:5000/chat';
+const endpoint = 'https://chefsuite.com.br/chat';
+//const endpoint = 'http://localhost:5000/chat';
 let email = null;
 let contactsJson = null;
 
@@ -136,19 +136,19 @@ function initClient(){
         let pushname = await client.info.pushname;
 			
 		stompClient.send("/app/chat/ready-" + email, {},
-		JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'READY', 
+		JSON.stringify({ 'from': email, 'to': "", 'message': "", 'whatsappMessageType': 'READY', 
 		'whatsappImageUrl': pic, 'whatsappPushname': pushname, 'contactsJson': contactsJson }));
 		
-		room = '/topic/messages/sendmessage-' + email;
+		room = '/topic/messages/sendmessagefromsystem-' + email;
 	
 		stompClient.subscribe(room, function (messageOutput) {
 
-			//let json = JSON.parse(messageOutput.body);
+			let json = JSON.parse(messageOutput.body);
 		
-			//let number = json.to;
-			//number = number.includes('@c.us') ? number : `${number}@c.us`;
+			let number = json.to;
+			number = number.includes('@c.us') ? number : `${number}@c.us`;
         
-			//client.sendMessage(number, json.message);
+			client.sendMessage(number, json.message);
 
 		});
 	
@@ -159,6 +159,7 @@ function initClient(){
 		console.log('MESSAGE RECEIVED', await client.info.wid.use);
 		
 		let pic = null;
+		let base64Image = null;
 		
 		let socket = new SockJS(endpoint);
 		let stompClient = Stomp.over(socket);
@@ -166,65 +167,27 @@ function initClient(){
 		(async () => {
 			
 			pic = await client.getProfilePicUrl(msg.from);
+			
+			if (msg.hasMedia) {
+			
+				base64Image = await msg.downloadMedia();
+			
+			}
 		
         })();
 
         stompClient.connect({}, function (frame) {
     
 	    setTimeout(function(){
+			
 		    stompClient.send("/app/chat/sendmessage-" + email, {},
 			JSON.stringify({ 'from': email, 'to': msg.from.split("@")[0], 'message': msg.body, 'whatsappMessageType': 'INBOUND', 
-			'whatsappImageUrl': pic }));
+			'whatsappImageUrl': pic , 'base64Image': base64Image != null ? base64Image.data : ''}));
 		
 		}, 1000);
 		
 		});
 		
-		if (msg.body === '!mention') {
-			const contact = await msg.getContact();
-			const chat = await msg.getChat();
-			chat.sendMessage(`Hi @${contact.number}!`, {
-				mentions: [contact]
-			});
-		} else if (msg.body === '!delete') {
-			if (msg.hasQuotedMsg) {
-				const quotedMsg = await msg.getQuotedMessage();
-				if (quotedMsg.fromMe) {
-					quotedMsg.delete(true);
-				} else {
-					msg.reply('I can only delete my own messages');
-				}
-			}
-		} else if (msg.body === '!pin') {
-			const chat = await msg.getChat();
-			await chat.pin();
-		} else if (msg.body === '!archive') {
-			const chat = await msg.getChat();
-			await chat.archive();
-		} else if (msg.body === '!mute') {
-			const chat = await msg.getChat();
-			// mute the chat for 20 seconds
-			const unmuteDate = new Date();
-			unmuteDate.setSeconds(unmuteDate.getSeconds() + 20);
-			await chat.mute(unmuteDate);
-		} else if (msg.body === '!typing') {
-			const chat = await msg.getChat();
-			// simulates typing in the chat
-			chat.sendStateTyping();
-		} else if (msg.body === '!recording') {
-			const chat = await msg.getChat();
-			// simulates recording audio in the chat
-			chat.sendStateRecording();
-		} else if (msg.body === '!clearstate') {
-			const chat = await msg.getChat();
-			// stops typing or recording in the chat
-			chat.clearState();
-		} else if (msg.body === '!jumpto') {
-			if (msg.hasQuotedMsg) {
-				const quotedMsg = await msg.getQuotedMessage();
-				client.interface.openChatWindowAt(quotedMsg.id._serialized);
-			}
-		}
 	});
 	
 	client.on('message_ack', (msg, ack) => {
