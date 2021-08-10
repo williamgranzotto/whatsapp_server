@@ -47,23 +47,25 @@ app.post('/init', function (req, res) {
 
 	let data = '';
 	
+	email = req.body.email;
+	
     req.on('data', chunk => {
 		data += chunk;
+		
     });
 	
     req.on('end', () => {
-		email = JSON.parse(data).email;
-		console.log(email);
+		
 		res.end();
     });
 	
 	socket = new SockJS(endpoint);
     stompClient = Stomp.over(socket);
-console.log(stompClient)
+
 	stompClient.connect({}, function (frame) {
-console.log("connect")
+
 		client = new Client();
-		console.log(client);
+		
 		initClient();
 
 	});
@@ -114,7 +116,7 @@ function initClient(){
 	
 	//init QRCode
 	client.on('qr', qr => {
-    console.log("qr")
+    console.log("/app/chat/qr-" + email)
 		stompClient.send("/app/chat/qr-" + email, {},
 			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
 	
