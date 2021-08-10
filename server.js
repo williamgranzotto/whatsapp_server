@@ -59,11 +59,11 @@ app.post('/init', function (req, res) {
 	
 	socket = new SockJS(endpoint);
     stompClient = Stomp.over(socket);
-
+console.log(stompClient)
 	stompClient.connect({}, function (frame) {
-
+console.log("connect")
 		client = new Client();
-		
+		console.log(client);
 		initClient();
 
 	});
@@ -114,7 +114,7 @@ function initClient(){
 	
 	//init QRCode
 	client.on('qr', qr => {
-    
+    console.log("qr")
 		stompClient.send("/app/chat/qr-" + email, {},
 			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
 	
