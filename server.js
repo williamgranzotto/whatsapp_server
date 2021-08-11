@@ -49,9 +49,6 @@ app.post('/init', function (req, res) {
 	
 	email = req.body.email;
 	
-	console.log("yyy-yyy");
-	console.log(email);
-	
     req.on('data', chunk => {
 		data += chunk;
 		
@@ -221,7 +218,5 @@ function initClient(){
 	client.initialize();
 
 }
-
-
 
 app.listen(8080);
