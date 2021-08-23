@@ -76,6 +76,8 @@ app.post('/init', function (req, res) {
 
 async function loadCustomers() {
 	
+	console.log("-----");
+	
 	let contacts = await client.getContacts();
 		
 		contactsJson = "[";
@@ -93,11 +95,11 @@ async function loadCustomers() {
 			+ "','isWAContact':'"+ obj.isWAContact +  "','pic':'"+ pic + "'}},";
 				
 			i++;
-			if(i == 5){
+			//if(i == 5){
 				
-			break;
+			//break;
 				
-			}
+			//}
 	
 		}
 	
@@ -106,9 +108,11 @@ async function loadCustomers() {
 		
 		console.log(contactsJson);
 		
-		stompClient.send("/app/chat/savecustomers" + email, {},
+		stompClient.send("/app/chat/savecustomers-" + email, {},
 		JSON.stringify({ 'from': email, 'to': "", 'message': "", 'whatsappMessageType': 'SAVE_CUSTOMERS', 
 		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': contactsJson }));
+		
+		console.log(":::" + stompClient)
 	
 }
 
@@ -159,7 +163,6 @@ function initClient(){
 	
 	//on message received
 	client.on('message', async msg => {
-		console.log('MESSAGE RECEIVED', await client.info.wid.use);
 		
 		let pic = null;
 		let base64Image = null;
