@@ -47,7 +47,12 @@ app.post('/init', function (req, res) {
 
 	let data = '';
 	
+	console.log("***");
+	console.log("***" + req.body.email);
+	
 	email = req.body.email;
+	
+	console.log("***" + email);
 	
     req.on('data', chunk => {
 		data += chunk;
