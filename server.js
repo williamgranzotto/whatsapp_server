@@ -44,140 +44,123 @@ app.use(function (req, res, next) {
 	
 // init application
 app.post('/init', function (req, res) {
-
-	let data = '';
 	
-	console.log("***");
-	console.log("***" + req.body.email);
-	
-	email = req.body.email;
-	
-	console.log("***" + email);
-	
-    req.on('data', chunk => {
-		data += chunk;
+	if(client == null){
 		
-    });
-	
-    req.on('end', () => {
+		client = new Map();
 		
-		res.end();
-    });
+	}
 	
-	socket = new SockJS(endpoint);
-    stompClient = Stomp.over(socket);
-
-	stompClient.connect({}, function (frame) {
-
-		client = new Client();
+	if(socket == null){
 		
-		initClient();
+		socket = new Map()
+		
+	}
+	
+	if(stompClient == null){
+		
+		stompClient = new Map();
+		
+	}
+	
+	if(email == null){
+		
+		email = new Array();
+		
+	}
+	
+	let _email = req.body.email;
+	
+	if(!email.includes(_email)){
+		
+		email.push(_email);
+		
+		socket.set(_email, new SockJS(endpoint));
+		
+		stompClient.set(_email, Stomp.over(socket.get(_email)));
+		
+		stompClient.get(_email).connect({}, function (frame) {
+
+		client.set(_email, new Client());
+		
+		initClient(_email);
 
 	});
+		
+	}
 	
 	res.status(204).end();
 	
 });
 
-async function loadCustomers() {
-	
-	console.log("-----");
-	
-	let contacts = await client.getContacts();
-		
-		contactsJson = "[";
-		
-		let i = 0;
-		for (var key in contacts) {
-			// skip loop if the property is from prototype
-			if (!contacts.hasOwnProperty(key)) continue;
-
-			var obj = contacts[key];
-	
-			let pic = await client.getProfilePicUrl(obj.id._serialized);
-    
-			contactsJson += "{'contact':{'pushname':'" + obj.pushname + "','number':'" + obj.number + "','isGroup':'" + obj.isGroup 
-			+ "','isWAContact':'"+ obj.isWAContact +  "','pic':'"+ pic + "'}},";
-				
-			i++;
-			//if(i == 5){
-				
-			//break;
-				
-			//}
-	
-		}
-	
-		contactsJson = contactsJson.substring(0, contactsJson.length - 1);
-		contactsJson += "]";
-		
-		console.log(contactsJson);
-		
-		stompClient.send("/app/chat/savecustomers-" + email, {},
-		JSON.stringify({ 'from': email, 'to': "", 'message': "", 'whatsappMessageType': 'SAVE_CUSTOMERS', 
-		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': contactsJson }));
-		
-		console.log(":::" + stompClient)
-	
-}
-
-function initClient(){
+function initClient(_email){
 	
 	//init QRCode
-	client.on('qr', qr => {
-    console.log("/app/chat/qr-" + email)
-		stompClient.send("/app/chat/qr-" + email, {},
+	client.get(_email).on('qr', qr => {
+		stompClient.get(_email).send("/app/chat/qr-" + _email, {},
 			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
 	
 	});
 
 	//when QRCode read
-	client.on('ready', async () => {
+	client.get(_email).on('ready', async () => {
 		console.log('Client is ready!');
 		
-		let room = '/topic/messages/loadcustomers-' + email;
+		let room = '/topic/messages/loadcustomers-' + _email;
 	
-		stompClient.subscribe(room, function (messageOutput) {
+		stompClient.get(_email).subscribe(room, function (messageOutput) {
 			
-			loadCustomers();
+			loadCustomers(_email);
 		
 		});
 		
-		let pic = await client.getProfilePicUrl(client.info.wid.user);
-
-        let pushname = await client.info.pushname;
+		let info = await client.get(_email).info;
+		let pic = null;
+		
+		if(info != undefined){
+		
+			pic = await client.get(_email).getProfilePicUrl(client.get(_email).info.wid.user);
+		
+		}
+	
+        let pushname = await client.get(_email).info.pushname;
 			
-		stompClient.send("/app/chat/ready-" + email, {},
-		JSON.stringify({ 'from': email, 'to': "", 'message': "", 'whatsappMessageType': 'READY', 
+		stompClient.get(_email).send("/app/chat/ready-" + _email, {},
+		JSON.stringify({ 'from': _email, 'to': "", 'message': "", 'whatsappMessageType': 'READY', 
 		'whatsappImageUrl': pic, 'whatsappPushname': pushname, 'contactsJson': contactsJson }));
 		
-		room = '/topic/messages/sendmessagefromsystem-' + email;
+		room = '/topic/messages/sendmessagefromsystem-' + _email;
 	
-		stompClient.subscribe(room, function (messageOutput) {
+		stompClient.get(_email).subscribe(room, function (messageOutput) {
 
 			let json = JSON.parse(messageOutput.body);
 		
 			let number = json.to;
 			number = number.includes('@c.us') ? number : `${number}@c.us`;
         
-			client.sendMessage(number, json.message);
+			client.get(_email).sendMessage(number, json.message);
 
+		});
+		
+		room = '/topic/messages/logout-' + _email;
+	
+		stompClient.get(_email).subscribe(room, function (messageOutput) {
+			
+			logout(_email);
+		
 		});
 	
     });
 	
 	//on message received
-	client.on('message', async msg => {
+	client.get(_email).on('message', async msg => {
 		
 		let pic = null;
 		let base64Image = null;
 		
-		let socket = new SockJS(endpoint);
-		let stompClient = Stomp.over(socket);
-		
 		(async () => {
 			
-			pic = await client.getProfilePicUrl(msg.from);
+			pic = await client.get(_email).getProfilePicUrl(msg.from);
 			
 			if (msg.hasMedia) {
 			
@@ -186,22 +169,18 @@ function initClient(){
 			}
 		
         })();
-
-        stompClient.connect({}, function (frame) {
     
 	    setTimeout(function(){
 			
-		    stompClient.send("/app/chat/sendmessage-" + email, {},
-			JSON.stringify({ 'from': email, 'to': msg.from.split("@")[0], 'message': msg.body, 'whatsappMessageType': 'INBOUND', 
+		    stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
+			JSON.stringify({ 'from': _email, 'to': msg.from.split("@")[0], 'message': msg.body, 'whatsappMessageType': 'INBOUND', 
 			'whatsappImageUrl': pic , 'base64Image': base64Image != null ? base64Image.data : ''}));
 		
 		}, 1000);
 		
-		});
-		
 	});
 	
-	client.on('message_ack', (msg, ack) => {
+	client.get(_email).on('message_ack', (msg, ack) => {
     
 	console.log(ack);
 	
@@ -217,14 +196,78 @@ function initClient(){
 
     if(ack == 3) {
 		
-        stompClient.send("/app/chat/messageread-" + email, {},
+        stompClient.get(_email).send("/app/chat/messageread-" + _email, {},
 		JSON.stringify({ 'from': msg.id.remote.split('@')[0], 'to': "", 'message': "", 'whatsappMessageType': 'READ', 
 		'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
     }
 });
 
-	client.initialize();
+	client.get(_email).initialize();
 
+}
+
+async function loadCustomers(_email) {
+	
+	let contacts = await client.get(_email).getContacts();
+		
+		contactsJson = "[";
+		
+		for (var key in contacts) {
+			// skip loop if the property is from prototype
+			if (!contacts.hasOwnProperty(key)) continue;
+
+			var obj = contacts[key];
+	
+			let pic = await client.get(_email).getProfilePicUrl(obj.id._serialized);
+    
+			contactsJson += "{'contact':{'pushname':'" + obj.pushname + "','number':'" + obj.number + "','isGroup':'" + obj.isGroup 
+			+ "','isWAContact':'"+ obj.isWAContact +  "','pic':'"+ pic + "'}},";
+	
+		}
+	
+		contactsJson = contactsJson.substring(0, contactsJson.length - 1);
+		contactsJson += "]";
+		
+		stompClient.get(_email).send("/app/chat/savecustomers-" + _email, {},
+		JSON.stringify({ 'from': _email, 'to': "", 'message': "", 'whatsappMessageType': 'SAVE_CUSTOMERS', 
+		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': contactsJson }));
+	
+}
+
+function logout(_email){
+	
+	if(email.includes(_email)){
+		
+		Object.keys(client.get(_email)).forEach(function (key) {
+		
+			if(key.match('^'+ _email)) delete client[key];
+
+		});
+		
+		Object.keys(socket.get(_email)).forEach(function (key) {
+		
+			if(key.match('^'+ _email)) delete socket[key];
+
+		});
+		
+		Object.keys(stompClient.get(_email)).forEach(function (key) {
+		
+			if(key.match('^'+ _email)) delete stompClient[key];
+
+		});
+		
+		const index = email.indexOf(_email);
+		
+		if (index > -1) {
+			
+			email.splice(index, 1);
+		
+		}
+		
+	}
+	
+	initClient(_email)
+	
 }
 
 app.listen(8080);
