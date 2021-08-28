@@ -71,10 +71,12 @@ app.post('/init', function (req, res) {
 	
 	let _email = req.body.email;
 	
-	console.log(">>>" + email.includes(_email));
+	console.log("init: " + _email);
 	
 	if(!email.includes(_email)){
-		
+	
+		console.log("!init includes:" + _email);
+	
 		email.push(_email);
 		
 		socket.set(_email, new SockJS(endpoint));
@@ -91,6 +93,8 @@ app.post('/init', function (req, res) {
 		
 	}else{
 		
+		console.log("init includes: " + _email);
+		
 		initClient(_email);
 		
 	}
@@ -102,8 +106,10 @@ app.post('/init', function (req, res) {
 function initClient(_email){
 	
 	//init QRCode
-	console.log(">>>>" + client.get(_email));
 	client.get(_email).on('qr', qr => {
+		
+		console.log("qr: " + _email);
+		
 		stompClient.get(_email).send("/app/chat/qr-" + _email, {},
 			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
 	
@@ -111,7 +117,8 @@ function initClient(_email){
 
 	//when QRCode read
 	client.get(_email).on('ready', async () => {
-		console.log('Client is ready!');
+		
+		console.log("ready: " + _email);
 		
 		let room = '/topic/messages/loadcustomers-' + _email;
 	
@@ -243,11 +250,11 @@ async function loadCustomers(_email) {
 
 function logout(_email){
 	
-	console.log(email.includes(_email));
-	
-	console.log(client.get(_email));
+	console.log("logout: " + _email);
 	
 	if(email.includes(_email)){
+		
+		console.log("logout includes: " + _email);
 		
 		client.delete(_email);
 		
@@ -264,10 +271,6 @@ function logout(_email){
 		}
 		
 	}
-	
-	console.log(":>>>" + email.includes(_email));
-	
-	console.log(client.get(_email));
 	
 }
 
