@@ -71,6 +71,8 @@ app.post('/init', function (req, res) {
 	
 	let _email = req.body.email;
 	
+	console.log(">>>" + email.includes(_email));
+	
 	if(!email.includes(_email)){
 		
 		email.push(_email);
@@ -96,6 +98,7 @@ app.post('/init', function (req, res) {
 function initClient(_email){
 	
 	//init QRCode
+	console.log(">>>>" + client.get(_email));
 	client.get(_email).on('qr', qr => {
 		stompClient.get(_email).send("/app/chat/qr-" + _email, {},
 			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
@@ -236,25 +239,17 @@ async function loadCustomers(_email) {
 
 function logout(_email){
 	
+	console.log(email.includes(_email));
+	
+	console.log(client.get(_email));
+	
 	if(email.includes(_email)){
 		
-		Object.keys(client.get(_email)).forEach(function (key) {
+		client.delete(_email);
 		
-			if(key.match('^'+ _email)) delete client[key];
-
-		});
+		socket.delete(_email)
 		
-		Object.keys(socket.get(_email)).forEach(function (key) {
-		
-			if(key.match('^'+ _email)) delete socket[key];
-
-		});
-		
-		Object.keys(stompClient.get(_email)).forEach(function (key) {
-		
-			if(key.match('^'+ _email)) delete stompClient[key];
-
-		});
+		stompClient.delete(_email)
 		
 		const index = email.indexOf(_email);
 		
@@ -266,8 +261,19 @@ function logout(_email){
 		
 	}
 	
-	initClient(_email)
+	console.log(":>>>" + email.includes(_email));
 	
+	console.log(client.get(_email));
+	
+}
+
+function getMapSize(x) {
+    var len = 0;
+    for (var count in x) {
+            len++;
+    }
+
+    return len;
 }
 
 app.listen(8080);
