@@ -83,11 +83,15 @@ app.post('/init', function (req, res) {
 		
 		stompClient.get(_email).connect({}, function (frame) {
 
-		client.set(_email, new Client());
+			client.set(_email, new Client());
+		
+			initClient(_email);
+
+		});
+		
+	}else{
 		
 		initClient(_email);
-
-	});
 		
 	}
 	
@@ -265,15 +269,6 @@ function logout(_email){
 	
 	console.log(client.get(_email));
 	
-}
-
-function getMapSize(x) {
-    var len = 0;
-    for (var count in x) {
-            len++;
-    }
-
-    return len;
 }
 
 app.listen(8080);
