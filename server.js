@@ -260,6 +260,8 @@ function logout(_email){
 		
 		socket.delete(_email)
 		
+		stompClient.get(_email).disconnect();
+		
 		stompClient.delete(_email)
 		
 		const index = email.indexOf(_email);
