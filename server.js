@@ -7,7 +7,7 @@ const Stomp = require('stompjs');
 
 //init whatsapp web
 //const qrcode = require('qrcode-terminal');
-const { Client } = require('whatsapp-web.js');
+const { Client, MessageMedia } = require('whatsapp-web.js');
 
 //global variables
 let client = null;
@@ -18,6 +18,7 @@ let stompClient = null;
 const endpoint = 'https://chefsuite.com.br/chat';
 //const endpoint = 'http://localhost:5000/chat';
 let email = null;
+let qrCount = null;
 let contactsJson = null;
 
 app.use(express.static('public'));
@@ -46,6 +47,14 @@ app.use(function (req, res, next) {
 // init application
 app.post('/init', function (req, res) {
 	
+	init(req.body.email);
+	
+	res.status(204).end();
+	
+});
+
+function init(_email){
+	
 	if(client == null){
 		
 		client = new Map();
@@ -64,14 +73,18 @@ app.post('/init', function (req, res) {
 		
 	}
 	
+	if(qrCount == null){
+		
+		qrCount = new Map();
+		
+	}
+	
 	if(email == null){
 		
 		email = new Array();
 		
 	}
-	
-	let _email = req.body.email;
-	
+		
 	console.log("init: " + _email);
 	
 	if(!email.includes(_email)){
@@ -79,6 +92,8 @@ app.post('/init', function (req, res) {
 		console.log("!init includes:" + _email);
 	
 		email.push(_email);
+		
+		qrCount.set(_email, 0);
 		
 		socket.set(_email, new SockJS(endpoint));
 		
@@ -100,9 +115,7 @@ app.post('/init', function (req, res) {
 		
 	}
 	
-	res.status(204).end();
-	
-});
+}
 
 function initClient(_email){
 	
@@ -110,6 +123,19 @@ function initClient(_email){
 	client.get(_email).on('qr', qr => {
 		
 		console.log("qr: " + _email);
+		
+		qrCount.set(_email, parseInt(qrCount.get(_email)) + 1);
+		console.log(qrCount.get(_email));
+		
+		if(qrCount.get(_email) == 5){
+			
+			logout(_email);
+			
+			init(_email);
+			
+			return;
+			
+		}
 		
 		stompClient.get(_email).send("/app/chat/qr-" + _email, {},
 			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
@@ -146,14 +172,24 @@ function initClient(_email){
 		
 		room = '/topic/messages/sendmessagefromsystem-' + _email;
 	
-		stompClient.get(_email).subscribe(room, function (messageOutput) {
+		stompClient.get(_email).subscribe(room, async function (messageOutput) {
 
 			let json = JSON.parse(messageOutput.body);
-		
+			
 			let number = json.to;
 			number = number.includes('@c.us') ? number : `${number}@c.us`;
-        
-			client.get(_email).sendMessage(number, json.message);
+			
+			if(json.message.includes("base64,")){
+				
+				const media = await new MessageMedia("image/jpeg", json.message.split("base64,")[1], "image.jpg");
+			
+				client.get(_email).sendMessage(number, media);
+			
+			}else{
+				
+				client.get(_email).sendMessage(number, json.message);
+				
+			}
 
 		});
 		
