@@ -14,10 +14,9 @@ let client = null;
 let socket = null;
 let stompClient = null;
 
-const endpoint = 'https://chefsuite.com.br/chat';
-//const endpoint = 'http://localhost:5000/chat';
+//const endpoint = 'https://chefsuite.com.br/chat';
+const endpoint = 'http://localhost:5000/chat';
 let email = null;
-let qrCount = null;
 let contactsJson = null;
 
 app.use(express.static('public'));
@@ -72,12 +71,6 @@ function init(_email){
 		
 	}
 	
-	if(qrCount == null){
-		
-		qrCount = new Map();
-		
-	}
-	
 	if(email == null){
 		
 		email = new Array();
@@ -92,8 +85,6 @@ function init(_email){
 	
 		email.push(_email);
 		
-		qrCount.set(_email, 0);
-		
 		socket.set(_email, new SockJS(endpoint));
 		
 		stompClient.set(_email, Stomp.over(socket.get(_email)));
@@ -106,12 +97,6 @@ function init(_email){
 
 		});
 		
-	}else{
-		
-		console.log("init includes: " + _email);
-		
-		initClient(_email);
-		
 	}
 	
 }
@@ -119,27 +104,23 @@ function init(_email){
 function initClient(_email){
 	
 	//init QRCode
-	client.get(_email).on('qr', qr => {
+	try{
 		
-		console.log("qr: " + _email);
+		client.get(_email).on('qr', qr => {
 		
-		qrCount.set(_email, parseInt(qrCount.get(_email)) + 1);
-		console.log(qrCount.get(_email));
+			console.log("qr: " + _email);
 		
-		if(qrCount.get(_email) == 5){
-			
-			logout(_email);
-			
-			init(_email);
-			
-			return;
-			
-		}
-		
-		stompClient.get(_email).send("/app/chat/qr-" + _email, {},
-			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
+			stompClient.get(_email).send("/app/chat/qr-" + _email, {},
+				JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
 	
-	});
+		});
+		
+	}catch(err){
+		
+		console.log("!!!ERROR CATCHED!!!")
+		console.log(err);
+		
+	}
 
 	//when QRCode read
 	client.get(_email).on('ready', async () => {
@@ -192,13 +173,7 @@ function initClient(_email){
 
 		});
 		
-		room = '/topic/messages/logout-' + _email;
-	
-		stompClient.get(_email).subscribe(room, function (messageOutput) {
-			
-			logout(_email);
 		
-		});
 	
     });
 	
@@ -252,6 +227,14 @@ function initClient(_email){
     }
 });
 
+room = '/topic/messages/logout-' + _email;
+	
+		stompClient.get(_email).subscribe(room, function (messageOutput) {
+			
+			logout(_email);
+		
+		});
+
 	client.get(_email).initialize();
 
 }
@@ -292,15 +275,17 @@ function logout(_email){
 		
 		console.log("logout includes: " + _email);
 		
-		client.delete(_email);
-		
 		socket.delete(_email)
 		
 		stompClient.get(_email).disconnect();
 		
-		stompClient.delete(_email)
+		stompClient.delete(_email);
 		
-		const index = email.indexOf(_email);
+		client.get(_email).destroy();
+		
+		client.delete(_email);
+		
+		let index = email.indexOf(_email);
 		
 		if (index > -1) {
 			
