@@ -272,6 +272,8 @@ function logout(_email){
 	
 	console.log("logout: " + _email);
 	
+	try{
+		
 	if(email.includes(_email)){
 		
 		console.log("logout includes: " + _email);
@@ -293,6 +295,12 @@ function logout(_email){
 			email.splice(index, 1);
 		
 		}
+		
+	}
+	
+	}catch(err){
+		
+		console.log(">>>ERROR<<<");
 		
 	}
 	
