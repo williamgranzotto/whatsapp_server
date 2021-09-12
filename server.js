@@ -92,7 +92,7 @@ function init(_email){
 		
 		stompClient.get(_email).connect({}, function (frame) {
 
-			client.set(_email, new Client());
+			client.set(_email, new Client({qrTimeoutMs:0}));
 		
 			initClient(_email);
 
@@ -105,8 +105,7 @@ function init(_email){
 function initClient(_email){
 	
 	//init QRCode
-	try{
-		
+	
 		client.get(_email).on('qr', qr => {
 		
 			console.log("qr: " + _email);
@@ -115,13 +114,6 @@ function initClient(_email){
 				JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
 	
 		});
-		
-	}catch(err){
-		
-		console.log("!!!ERROR CATCHED!!!")
-		console.log(err);
-		
-	}
 
 	//when QRCode read
 	client.get(_email).on('ready', async () => {
