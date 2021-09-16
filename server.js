@@ -172,28 +172,7 @@ function initClient(_email){
 	//on message received
 	client.get(_email).on('message', async msg => {
 		
-		let pic = null;
-		let base64Image = null;
-		
-		(async () => {
-			
-			pic = await client.get(_email).getProfilePicUrl(msg.from);
-			
-			if (msg.hasMedia) {
-			
-				base64Image = await msg.downloadMedia();
-			
-			}
-		
-        })();
-    
-	    setTimeout(function(){
-			
-		    stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
-			JSON.stringify({ 'from': _email, 'to': msg.from.split("@")[0], 'message': msg.body, 'whatsappMessageType': 'INBOUND', 
-			'whatsappImageUrl': pic , 'base64Image': base64Image != null ? base64Image.data : ''}));
-		
-		}, 1000);
+		sendMessage(_email, msg, "INBOUND");
 		
 	});
 	
@@ -216,7 +195,11 @@ function initClient(_email){
         stompClient.get(_email).send("/app/chat/messageread-" + _email, {},
 		JSON.stringify({ 'from': msg.id.remote.split('@')[0], 'to': "", 'message': "", 'whatsappMessageType': 'READ', 
 		'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
-    }
+    }else if(ack == 2){
+		
+		sendMessage(_email, msg, "OUTBOUND");
+		
+	}
 });
 
 room = '/topic/messages/logout-' + _email;
@@ -229,6 +212,35 @@ room = '/topic/messages/logout-' + _email;
 
 	client.get(_email).initialize();
 
+}
+
+function sendMessage(_email, msg, type){
+	
+	let pic = null;
+		let base64Image = null;
+		
+		(async () => {
+			
+			pic = await client.get(_email).getProfilePicUrl(msg.from);
+			
+			if (msg.hasMedia) {
+			
+				base64Image = await msg.downloadMedia();
+			
+			}
+		
+        })();
+    
+	    setTimeout(function(){
+			
+			let _from = type == "INBOUND" ? msg.from.split("@")[0] : msg.to.split("@")[0];
+			
+		    stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
+			JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
+			'whatsappImageUrl': pic , 'base64Image': base64Image != null ? base64Image.data : ''}));
+		
+		}, 1000);
+	
 }
 
 async function loadCustomers(_email) {
