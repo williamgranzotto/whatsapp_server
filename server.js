@@ -198,7 +198,8 @@ function initClient(_email){
 		'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
     }else if(ack == 2){
 		
-		sendMessage(_email, msg, "OUTBOUND");
+		//sendMessage(_email, msg, "OUTBOUND");
+		
 		
 	}
 });
