@@ -11,6 +11,7 @@ const { Client, MessageMedia } = require('whatsapp-web.js');
 
 //global variables
 let client = null;
+let sendMessageMap = null;
 let socket = null;
 let stompClient = null;
 
@@ -58,6 +59,12 @@ function init(_email){
 		
 		client = new Map();
 		
+	}
+
+	if(sendMessageMap == null){
+		
+		sendMessageMap = new Map();
+		sendMessageMap.set(_email, true)
 	}
 	
 	if(socket == null){
@@ -152,6 +159,8 @@ function initClient(_email){
 			let number = json.to;
 			number = number.includes('@c.us') ? number : `${number}@c.us`;
 			
+			sendMessageMap.set(_email, false);
+			
 			if(json.message.includes("base64,")){
 				
 				const media = await new MessageMedia("image/jpeg", json.message.split("base64,")[1], "image.jpg");
@@ -166,14 +175,22 @@ function initClient(_email){
 
 		});
 		
-		
-	
     });
 	
-	//on message received
-	client.get(_email).on('message', async msg => {
+	//on message created
+	client.get(_email).on('message_create', async msg => {
 		
-		sendMessage(_email, msg, "INBOUND");
+		if(sendMessageMap.get(_email)){
+		
+			sendMessage(_email, msg);
+		
+			console.log("message created")
+		
+		}else{
+			
+			sendMessageMap.set(_email, true);
+			
+		}
 		
 	});
 	
@@ -196,12 +213,8 @@ function initClient(_email){
         stompClient.get(_email).send("/app/chat/messageread-" + _email, {},
 		JSON.stringify({ 'from': msg.id.remote.split('@')[0], 'to': "", 'message': "", 'whatsappMessageType': 'READ', 
 		'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
-    }else if(ack == 2){
-		
-		//sendMessage(_email, msg, "OUTBOUND");
-		
-		
-	}
+    }
+	
 });
 
 room = '/topic/messages/logout-' + _email;
@@ -216,7 +229,7 @@ room = '/topic/messages/logout-' + _email;
 
 }
 
-function sendMessage(_email, msg, type){
+function sendMessage(_email, msg){
 	
 	let pic = null;
 		let base64Image = null;
@@ -234,6 +247,8 @@ function sendMessage(_email, msg, type){
         })();
     
 	    setTimeout(function(){
+			
+			let type = msg.id.remote == msg.from ? "INBOUND" : "OUTBOUND";
 			
 			let _from = type == "INBOUND" ? msg.from.split("@")[0] : msg.to.split("@")[0];
 			
