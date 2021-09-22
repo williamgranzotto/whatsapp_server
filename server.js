@@ -87,8 +87,13 @@ function init(_email){
 		
 	console.log("init: " + _email);
 	
-	if(!email.includes(_email)){
-	
+	//this line is to fix error of clear cache
+	if(email.includes(_email)){
+		
+		logout(_email);
+		
+	}
+		
 		console.log("!init includes:" + _email);
 	
 		email.push(_email);
@@ -104,8 +109,6 @@ function init(_email){
 			initClient(_email);
 
 		});
-		
-	}
 	
 }
 
