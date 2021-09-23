@@ -15,8 +15,8 @@ let sendMessageMap = null;
 let socket = null;
 let stompClient = null;
 
-const endpoint = 'https://chefsuite.com.br/chat';
-//const endpoint = 'http://localhost:5000/chat';
+//const endpoint = 'https://chefsuite.com.br/chat';
+const endpoint = 'http://localhost:5000/chat';
 
 let email = null;
 let contactsJson = null;
@@ -257,7 +257,7 @@ function sendMessage(_email, msg){
 			
 		    stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
 			JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
-			'whatsappImageUrl': pic , 'base64Image': base64Image != null ? base64Image.data : ''}));
+			'whatsappImageUrl': pic , 'base64Image': base64Image != null ? base64Image.data : null}));
 		
 		}, 1000);
 	
