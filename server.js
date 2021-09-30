@@ -252,12 +252,19 @@ function sendMessage(_email, msg){
 	    setTimeout(function(){
 			
 			let type = msg.id.remote == msg.from ? "INBOUND" : "OUTBOUND";
+	
+			if(type == "OUTBOUND" && msg.body.startsWith("/9j/")){
+			
+				return;
+			
+			}
 			
 			let _from = type == "INBOUND" ? msg.from.split("@")[0] : msg.to.split("@")[0];
 			
 		    stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
 			JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
 			'whatsappImageUrl': pic , 'base64Image': base64Image != null ? base64Image.data : null}));
+
 		
 		}, 1000);
 	
