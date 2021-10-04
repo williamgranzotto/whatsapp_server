@@ -15,6 +15,7 @@ let sendMessageMap = null;
 let socket = null;
 let stompClient = null;
 
+
 const endpoint = 'https://chefsuite.com.br/chat';
 //const endpoint = 'http://localhost:5000/chat';
 
