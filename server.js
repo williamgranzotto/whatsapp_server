@@ -235,10 +235,12 @@ room = '/topic/messages/logout-' + _email;
 function sendMessage(_email, msg){
 	
 	let pic = null;
-		let base64Image = null;
+	let base64Image = null;
 		
-		(async () => {
+	(async () => {
 			
+		try{
+				
 			pic = await client.get(_email).getProfilePicUrl(msg.from);
 			
 			if (msg.hasMedia) {
@@ -246,27 +248,33 @@ function sendMessage(_email, msg){
 				base64Image = await msg.downloadMedia();
 			
 			}
+			
+		}catch(err){
+			
+			console.log(">>>ERROR_PIC<<< " + _email + " - " + msg.from)
+			
+		}
 		
-        })();
+    })();
     
-	    setTimeout(function(){
+	setTimeout(function(){
 			
-			let type = msg.id.remote == msg.from ? "INBOUND" : "OUTBOUND";
+		let type = msg.id.remote == msg.from ? "INBOUND" : "OUTBOUND";
 	
-			if(type == "OUTBOUND" && msg.body.startsWith("/9j/")){
+		if(type == "OUTBOUND" && msg.body.startsWith("/9j/")){
 			
-				return;
+			return;
 			
-			}
+		}
 			
-			let _from = type == "INBOUND" ? msg.from.split("@")[0] : msg.to.split("@")[0];
+		let _from = type == "INBOUND" ? msg.from.split("@")[0] : msg.to.split("@")[0];
 			
-		    stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
-			JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
-			'whatsappImageUrl': pic , 'base64Image': base64Image != null ? base64Image.data : null}));
+		stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
+		JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
+		'whatsappImageUrl': pic , 'base64Image': base64Image != null ? base64Image.data : null}));
 
 		
-		}, 1000);
+	}, 1000);
 	
 }
 
