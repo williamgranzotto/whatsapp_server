@@ -251,7 +251,7 @@ function sendMessage(_email, msg){
 			
 		}catch(err){
 			
-			console.log(">>>ERROR_PIC<<< " + _email + " - " + msg.from)
+			console.log(">>>ERROR_PIC<<< " + _email + " - " + msg.from);
 			
 		}
 		
@@ -285,13 +285,24 @@ async function loadCustomers(_email) {
 		contactsJson = "[";
 		
 		for (var key in contacts) {
+			
 			// skip loop if the property is from prototype
 			if (!contacts.hasOwnProperty(key)) continue;
 
 			var obj = contacts[key];
 	
-			let pic = await client.get(_email).getProfilePicUrl(obj.id._serialized);
+			let pic = null;
+			
+			try{
+			
+				pic = await client.get(_email).getProfilePicUrl(obj.id._serialized);
     
+			}catch(err){
+				
+				console.log(">>>ERROR_PIC_LOADCUSTOMERS<<<")
+				
+			}
+	
 			contactsJson += "{'contact':{'pushname':'" + obj.pushname + "','number':'" + obj.number + "','isGroup':'" + obj.isGroup 
 			+ "','isWAContact':'"+ obj.isWAContact +  "','pic':'"+ pic + "'}},";
 	
@@ -301,7 +312,7 @@ async function loadCustomers(_email) {
 		contactsJson += "]";
 		
 		stompClient.get(_email).send("/app/chat/savecustomers-" + _email, {},
-		JSON.stringify({ 'from': _email, 'to': "", 'message': "", 'whatsappMessageType': 'SAVE_CUSTOMERS', 
+		JSON.stringify({ 'from': _email, 'to': "", 'message': "saved customer", 'whatsappMessageType': 'SAVE_CUSTOMERS', 
 		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': contactsJson }));
 	
 }
