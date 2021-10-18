@@ -323,29 +323,37 @@ function logout(_email){
 	
 	try{
 		
-	if(email.includes(_email)){
+		if(email.includes(_email)){
 		
-		console.log("logout includes: " + _email);
+			console.log("logout includes: " + _email);
 		
-		socket.delete(_email)
+			socket.delete(_email);
 		
-		stompClient.get(_email).disconnect();
+			if(stompClient.get(_email) != null){
 		
-		stompClient.delete(_email);
+				stompClient.get(_email).disconnect();
 		
-		client.get(_email).destroy();
+			}
 		
-		client.delete(_email);
+			stompClient.delete(_email);
 		
-		let index = email.indexOf(_email);
+			if(client.get(_email) != null){
 		
-		if (index > -1) {
+				client.get(_email).destroy();
+		
+			}
+		
+			client.delete(_email);
+		
+			let index = email.indexOf(_email);
+		
+			if (index > -1) {
 			
-			email.splice(index, 1);
+				email.splice(index, 1);
+		
+			}
 		
 		}
-		
-	}
 	
 	}catch(err){
 		
