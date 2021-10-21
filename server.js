@@ -199,7 +199,7 @@ function initClient(_email){
 	
 	client.get(_email).on('message_ack', (msg, ack) => {
     
-	console.log(ack);
+		console.log(ack);
 	
 	/*
         == ACK VALUES ==
@@ -211,21 +211,27 @@ function initClient(_email){
         ACK_PLAYED: 4
     */
 
-    if(ack == 3) {
+		if(ack == 3) {
 		
-        stompClient.get(_email).send("/app/chat/messageread-" + _email, {},
-		JSON.stringify({ 'from': msg.id.remote.split('@')[0], 'to': "", 'message': "", 'whatsappMessageType': 'READ', 
-		'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
-    }
+			stompClient.get(_email).send("/app/chat/messageread-" + _email, {},
+			JSON.stringify({ 'from': msg.id.remote.split('@')[0], 'to': "", 'message': "", 'whatsappMessageType': 'READ', 
+			'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
+		}
 	
-});
+	});
 
-room = '/topic/messages/logout-' + _email;
+	room = '/topic/messages/logout-' + _email;
 	
 		stompClient.get(_email).subscribe(room, function (messageOutput) {
 			
 			logout(_email);
 		
+		});
+		
+		client.get(_email).on('disconnected', (reason) => {
+   
+			console.log('Client was logged out', reason);
+
 		});
 
 	client.get(_email).initialize();
@@ -268,6 +274,9 @@ function sendMessage(_email, msg){
 		}
 			
 		let _from = type == "INBOUND" ? msg.from.split("@")[0] : msg.to.split("@")[0];
+			
+		console.log("stompClient >>>");
+		console.log(stompClient.get(_email));
 			
 		stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
 		JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
