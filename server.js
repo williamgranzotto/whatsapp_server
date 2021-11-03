@@ -15,8 +15,8 @@ let sendMessageMap = null;
 let socket = null;
 let stompClient = null;
 
-const endpoint = 'https://chefsuite.com.br/chat';
-//const endpoint = 'http://localhost:5000/chat';
+//const endpoint = 'https://chefsuite.com.br/chat';
+const endpoint = 'http://localhost:5000/chat';
 
 let email = null;
 let contactsJson = null;
@@ -199,7 +199,7 @@ function initClient(_email){
 	
 	client.get(_email).on('message_ack', (msg, ack) => {
     
-		console.log(ack);
+		//console.log(ack);
 	
 	/*
         == ACK VALUES ==
@@ -275,9 +275,6 @@ function sendMessage(_email, msg){
 			
 		let _from = type == "INBOUND" ? msg.from.split("@")[0] : msg.to.split("@")[0];
 			
-		console.log("stompClient >>>");
-		console.log(stompClient.get(_email));
-			
 		stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
 		JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
 		'whatsappImageUrl': pic , 'base64Image': base64Image != null ? base64Image.data : null}));
@@ -333,8 +330,6 @@ function logout(_email){
 	try{
 		
 		if(email.includes(_email)){
-		
-			console.log("logout includes: " + _email);
 		
 			socket.delete(_email);
 		
