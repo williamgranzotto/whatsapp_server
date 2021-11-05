@@ -343,7 +343,15 @@ function logout(_email){
 		
 			if(client.get(_email) != null){
 		
-				client.get(_email).destroy();
+				try{
+					
+					client.get(_email).destroy();
+		
+				}catch(err){
+					
+					console.log(">>>ERROR DESTROY<<<");			
+					
+				}
 		
 			}
 		
