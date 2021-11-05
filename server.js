@@ -345,7 +345,11 @@ function logout(_email){
 		
 				try{
 					
-					client.get(_email).destroy();
+					client.get(_email).destroy().catch(err => {
+						
+						throw new Error(err);
+					
+					});
 		
 				}catch(err){
 					
