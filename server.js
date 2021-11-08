@@ -234,7 +234,12 @@ function initClient(_email){
 
 		});
 
-	client.get(_email).initialize();
+	client.get(_email).initialize().catch(ex => {
+		
+		console.log(">>>ERROR_INITIALIZE<<<");
+		console.log(ex);
+		
+	});
 
 }
 
