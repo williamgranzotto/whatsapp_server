@@ -115,14 +115,14 @@ function init(_email){
 function initClient(_email){
 	
 	//init QRCode
-	console.log(11)
+	
 		client.get(_email).on('qr', qr => {
-		console.log(22)
+		
 			console.log("qr: " + _email);
 		
 			stompClient.get(_email).send("/app/chat/qr-" + _email, {},
 				JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
-	console.log(33)
+	
 		});
 
 	//when QRCode read
@@ -234,12 +234,12 @@ alert(2)
 
 		});
 
-	client.get(_email).initialize();//.catch(ex => {
+	client.get(_email).initialize().catch(ex => {
 		
-		//console.log(">>>ERROR_INITIALIZE<<<");
-		//console.log(ex);
+		console.log(">>>ERROR_INITIALIZE<<<");
+		console.log(ex);
 		
-	//});
+	});
 
 }
 
