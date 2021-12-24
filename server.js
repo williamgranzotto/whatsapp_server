@@ -156,22 +156,22 @@ function initClient(_email){
 		room = '/topic/messages/sendmessagefromsystem-' + _email;
 	
 		stompClient.get(_email).subscribe(room, async function (messageOutput) {
-alert(1)
+
 			let json = JSON.parse(messageOutput.body);
-alert(2)			
+			
 			let number = json.to;
 			number = number.includes('@c.us') ? number : `${number}@c.us`;
-		alert(3)	
+		
 			sendMessageMap.set(_email, false);
-			alert(4)
+			
 			if(json.message.includes("base64,")){
-				alert(5)
+				
 				const media = await new MessageMedia("image/jpeg", json.message.split("base64,")[1], "image.jpg");
 			
 				client.get(_email).sendMessage(number, media);
 			
 			}else{
-				alert(6)
+				
 				client.get(_email).sendMessage(number, json.message);
 				
 			}
