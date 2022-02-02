@@ -1,0 +1,6 @@
+2022/02/02-14:51:35.736 4984 Reusing MANIFEST C:\Users\Usuario\nodeserver\WWebJS\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2022/02/02-14:51:35.737 4984 Recovering log #3
+2022/02/02-14:51:36.296 4984 Reusing old log C:\Users\Usuario\nodeserver\WWebJS\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000003.log 
+2022/02/02-14:51:50.714 3ec Level-0 table #5: started
+2022/02/02-14:51:50.758 3ec Level-0 table #5: 1139258 bytes OK
+2022/02/02-14:51:50.764 3ec Delete type=0 #3

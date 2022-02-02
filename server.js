@@ -104,11 +104,16 @@ function init(_email){
 		
 		stompClient.get(_email).connect({}, function (frame) {
 
-			client.set(_email, new Client({qrTimeoutMs:0}));
+			let _client = new Client({qrTimeoutMs:0, session: {}});
+
+			client.set(_email, _client);
+			
 		
 			initClient(_email);
 
 		});
+		
+		
 	
 }
 
@@ -124,7 +129,7 @@ function initClient(_email){
 				JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
 	
 		});
-
+		
 	//when QRCode read
 	client.get(_email).on('ready', async () => {
 		
@@ -139,12 +144,20 @@ function initClient(_email){
 		});
 		
 		let info = await client.get(_email).info;
+		
 		let pic = null;
 		
 		if(info != undefined){
 		
-			pic = await client.get(_email).getProfilePicUrl(client.get(_email).info.wid.user);
-		
+			try{
+				
+				pic = await client.get(_email).getProfilePicUrl(client.get(_email).info.wid.user);
+			
+			}catch(e){
+			
+			    console.log(">>>>INVALID PIC<<<<");
+			
+			}
 		}
 	
         let pushname = await client.get(_email).info.pushname;
@@ -328,7 +341,7 @@ async function loadCustomers(_email) {
 	
 }
 
-function logout(_email){
+async function logout(_email){
 	
 	console.log("logout: " + _email);
 	
@@ -348,7 +361,9 @@ function logout(_email){
 		
 			if(client.get(_email) != null){
 		
-				client.get(_email).destroy();
+				await client.get(_email).logout();
+		
+				//client.get(_email).destroy();
 		
 			}
 		
