@@ -1,2 +1,3 @@
-2022/02/02-12:26:28.331 2b7c Creating DB C:\Users\Usuario\nodeserver\WWebJS\session\Default\Extension State since it was missing.
-2022/02/02-12:26:28.351 2b7c Reusing MANIFEST C:\Users\Usuario\nodeserver\WWebJS\session\Default\Extension State/MANIFEST-000001
+2022/02/05-14:33:03.229 458 Reusing MANIFEST C:\Users\Usuario\nodeserver\WWebJS\session\Default\Extension State/MANIFEST-000001
+2022/02/05-14:33:03.230 458 Recovering log #3
+2022/02/05-14:33:03.231 458 Reusing old log C:\Users\Usuario\nodeserver\WWebJS\session\Default\Extension State/000003.log 

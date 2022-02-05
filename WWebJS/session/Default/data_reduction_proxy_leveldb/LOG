@@ -1,2 +1,3 @@
-2022/02/02-12:26:33.886 1e08 Creating DB C:\Users\Usuario\nodeserver\WWebJS\session\Default\data_reduction_proxy_leveldb since it was missing.
-2022/02/02-12:26:33.927 1e08 Delete type=3 #1
+2022/02/05-14:33:08.819 14e4 Recovering log #3
+2022/02/05-14:33:08.840 14e4 Delete type=0 #3
+2022/02/05-14:33:08.840 14e4 Delete type=3 #2

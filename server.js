@@ -87,30 +87,29 @@ function init(_email){
 	console.log("init: " + _email);
 	
 	//this line is to fix error of clear cache
-	if(email.includes(_email)){
+	logout(_email);
 		
-		logout(_email);
-		
-	}
-		
-		console.log("!init includes:" + _email);
+	console.log("!init includes:" + _email);
 	
-		email.push(_email);
+	email.push(_email);
 		
-		socket.set(_email, new SockJS(endpoint));
+	socket.set(_email, new SockJS(endpoint));
 		
-		stompClient.set(_email, Stomp.over(socket.get(_email)));
+	stompClient.set(_email, Stomp.over(socket.get(_email)));
 		
-		stompClient.get(_email).connect({}, function (frame) {
+	stompClient.get(_email).connect({}, function (frame) {
+			
+		setTimeout(function(){
 
-			let _client = new Client({qrTimeoutMs:0, session: {}});
+			let _client = new Client({qrTimeoutMs:0});
 
 			client.set(_email, _client);
-			
 		
 			initClient(_email);
+				
+		}, 1000);
 
-		});
+	});
 		
 		
 	
@@ -120,14 +119,14 @@ function initClient(_email){
 	
 	//init QRCode
 	
-		client.get(_email).on('qr', qr => {
+	client.get(_email).on('qr', qr => {
 		
-			console.log("qr: " + _email);
+		console.log("qr: " + _email);
 		
-			stompClient.get(_email).send("/app/chat/qr-" + _email, {},
-				JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
+		stompClient.get(_email).send("/app/chat/qr-" + _email, {},
+			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
 	
-		});
+	});
 		
 	//when QRCode read
 	client.get(_email).on('ready', async () => {
@@ -147,16 +146,9 @@ function initClient(_email){
 		let pic = null;
 		
 		if(info != undefined){
-		
-			try{
-				
-				pic = await client.get(_email).getProfilePicUrl(client.get(_email).info.wid.user);
-			
-			}catch(e){
-			
-			    console.log(">>>>INVALID PIC<<<<");
-			
-			}
+            
+			pic = await getProfilePic(info.wid.user, _email);
+				   
 		}
 	
         let pushname = await client.get(_email).info.pushname;
@@ -255,6 +247,32 @@ function initClient(_email){
 
 }
 
+async function getProfilePic(number, _email){
+	
+	let profilePic = await client.get(_email).getNumberId(number).then(async (id) => {
+                
+		if (id != null) {
+                    
+			const profilePicObj = await client.get(_email).pupPage.evaluate((contactId) => {
+            
+				return window.Store.Wap.profilePicFind(contactId);
+				
+			}, id.user + '@' + id.server);
+			
+			return profilePicObj.eurl;
+				
+        }else {
+					
+            console.log('>>>ERROR_This number hasn`t whatsapp<<<');
+                
+		}
+				
+    });
+
+	return profilePic;
+	
+}
+
 function sendMessage(_email, msg){
 	
 	let pic = null;
@@ -264,7 +282,7 @@ function sendMessage(_email, msg){
 			
 		try{
 				
-			pic = await client.get(_email).getProfilePicUrl(msg.from);
+			pic = await client.get(_email).getProfilePicUrl(msg.from, _email);
 			
 			if (msg.hasMedia) {
 			
@@ -318,7 +336,7 @@ async function loadCustomers(_email) {
 			
 			try{
 			
-				pic = await client.get(_email).getProfilePicUrl(obj.id._serialized);
+				pic = await getProfilePic(obj.id.user, _email);
     
 			}catch(err){
 				
@@ -360,7 +378,11 @@ async function logout(_email){
 		
 			if(client.get(_email) != null){
 		
-				await client.get(_email).logout();
+				await client.get(_email).logout().catch(err => {
+				
+					//left blank intentionally
+				
+				});
 		
 				//client.get(_email).destroy();
 		
@@ -380,7 +402,7 @@ async function logout(_email){
 	
 	}catch(err){
 		
-		console.log(">>>ERROR<<<");
+		console.log(">>>ERROR_LOGOUT<<<");
 		
 	}
 	

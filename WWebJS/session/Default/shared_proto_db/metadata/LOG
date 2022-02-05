@@ -1,2 +1,3 @@
-2022/02/02-12:26:28.254 4228 Creating DB C:\Users\Usuario\nodeserver\WWebJS\session\Default\shared_proto_db\metadata since it was missing.
-2022/02/02-12:26:28.282 4228 Reusing MANIFEST C:\Users\Usuario\nodeserver\WWebJS\session\Default\shared_proto_db\metadata/MANIFEST-000001
+2022/02/05-14:33:03.165 6008 Reusing MANIFEST C:\Users\Usuario\nodeserver\WWebJS\session\Default\shared_proto_db\metadata/MANIFEST-000001
+2022/02/05-14:33:03.166 6008 Recovering log #3
+2022/02/05-14:33:03.167 6008 Reusing old log C:\Users\Usuario\nodeserver\WWebJS\session\Default\shared_proto_db\metadata/000003.log 
