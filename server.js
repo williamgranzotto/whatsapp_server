@@ -302,7 +302,7 @@ function sendMessage(_email, msg){
 			
 		try{
 				
-			pic = await client.get(_email).getProfilePicUrl(msg.from, _email);
+			pic = await client.get(_email).getProfilePicUrl(msg.from.split("@")[0], _email);
 			
 			if (msg.hasMedia) {
 			
