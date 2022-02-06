@@ -17,6 +17,7 @@ let stompClient = null;
 
 const endpoint = 'https://chefsuite.com.br/chat';
 //const endpoint = 'http://localhost:5000/chat';
+
 let email = null;
 let contactsJson = null;
 
@@ -87,7 +88,7 @@ function init(_email){
 	console.log("init: " + _email);
 	
 	//this line is to fix error of clear cache
-	logout(_email);
+	logout(_email, false);
 		
 	console.log("!init includes:" + _email);
 	
@@ -118,14 +119,26 @@ function init(_email){
 function initClient(_email){
 	
 	//init QRCode
-	
+	let _qr = 1;
 	client.get(_email).on('qr', qr => {
 		
 		console.log("qr: " + _email);
 		
+		if(_qr == 3){
+			//console.log(client.get(_email))
+			stompClient.get(_email).send("/app/chat/refresh-" + _email, {},
+			JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'REFRESH', 
+			'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
+			
+			logout(_email, true);
+			
+			return;
+			
+		}
+		
 		stompClient.get(_email).send("/app/chat/qr-" + _email, {},
 			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
-	
+	_qr++;
 	});
 		
 	//when QRCode read
@@ -228,7 +241,7 @@ function initClient(_email){
 	
 		stompClient.get(_email).subscribe(room, function (messageOutput) {
 			
-			logout(_email);
+			logout(_email, false);
 		
 		});
 		
@@ -237,11 +250,10 @@ function initClient(_email){
 			console.log('Client was logged out', reason);
 
 		});
-
+		
 	client.get(_email).initialize().catch(ex => {
 		
-		console.log(">>>ERROR_INITIALIZE<<<");
-		console.log(ex);
+		//left blank intentionally
 		
 	});
 
@@ -358,7 +370,7 @@ async function loadCustomers(_email) {
 	
 }
 
-async function logout(_email){
+async function logout(_email, qr){
 	
 	console.log("logout: " + _email);
 	
@@ -378,13 +390,20 @@ async function logout(_email){
 		
 			if(client.get(_email) != null){
 		
-				await client.get(_email).logout().catch(err => {
-				
-					//left blank intentionally
-				
-				});
+				if(qr){
+					
+					client.get(_email).destroy();
+					
+				}else{
 		
-				//client.get(_email).destroy();
+					await client.get(_email).logout().catch(err => {
+				
+				
+						//left blank intentionally
+				
+					});
+				
+				}
 		
 			}
 		

@@ -1,3 +1,2 @@
-2022/02/05-15:13:41.603 6900 Reusing MANIFEST C:\Users\Usuario\nodeserver\WWebJS\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2022/02/05-15:13:41.604 6900 Recovering log #4
-2022/02/05-15:13:41.632 6900 Reusing old log C:\Users\Usuario\nodeserver\WWebJS\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000004.log 
+2022/02/06-11:04:34.152 4434 Creating DB C:\Users\Usuario\nodeserver\WWebJS\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb since it was missing.
+2022/02/06-11:04:34.166 4434 Reusing MANIFEST C:\Users\Usuario\nodeserver\WWebJS\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
