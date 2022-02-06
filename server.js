@@ -302,14 +302,17 @@ function sendMessage(_email, msg){
 			
 		try{
 				
-			pic = await client.get(_email).getProfilePicUrl(msg.from.split("@")[0], _email);
-			
+			let number = msg.from.split("@")[0];
+			console.log(number);
+				
+			pic = await client.get(_email).getProfilePicUrl(number, _email);
+			console.log(1);
 			if (msg.hasMedia) {
 			
 				base64Image = await msg.downloadMedia();
 			
 			}
-			
+			console.log(2);
 		}catch(err){
 			
 			console.log(">>>ERROR_PIC<<< " + _email + " - " + msg.from);
