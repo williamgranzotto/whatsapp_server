@@ -303,9 +303,8 @@ function sendMessage(_email, msg){
 		try{
 				
 			let number = msg.from.split("@")[0];
-			console.log(number);
 				
-			pic = await client.get(_email).getProfilePicUrl(number, _email);
+			pic = await getProfilePic(number, _email);
 			console.log(1);
 			if (msg.hasMedia) {
 			
