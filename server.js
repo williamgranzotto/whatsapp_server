@@ -239,17 +239,25 @@ function initClient(_email){
 
 	room = '/topic/messages/logout-' + _email;
 	
-		stompClient.get(_email).subscribe(room, function (messageOutput) {
+	stompClient.get(_email).subscribe(room, function (messageOutput) {
 			
-			logout(_email, false);
+		logout(_email, false);
 		
-		});
+	});
+	
+	room = '/topic/messages/logout-qrcode-' + _email;
+	
+	stompClient.get(_email).subscribe(room, function (messageOutput) {
+			
+		logout(_email, true);
 		
-		client.get(_email).on('disconnected', (reason) => {
+	});
+		
+	client.get(_email).on('disconnected', (reason) => {
    
-			console.log('Client was logged out', reason);
+		console.log('Client was logged out', reason);
 
-		});
+	});
 		
 	client.get(_email).initialize().catch(ex => {
 		
@@ -395,12 +403,11 @@ async function logout(_email, qr){
 					client.get(_email).destroy();
 					
 				}else{
-		
+					
 					await client.get(_email).logout().catch(err => {
 				
-				
 						//left blank intentionally
-				
+					
 					});
 				
 				}

@@ -1,3 +1,4 @@
-2022/02/06-11:04:32.756 8dfc Reusing MANIFEST C:\Users\Usuario\nodeserver\WWebJS\session\Default\File System\Origins/MANIFEST-000001
-2022/02/06-11:04:32.756 8dfc Recovering log #3
-2022/02/06-11:04:32.757 8dfc Reusing old log C:\Users\Usuario\nodeserver\WWebJS\session\Default\File System\Origins/000003.log 
+2022/02/06-15:33:16.172 59b8 Log #3: 285 ops saved to Table #4 OK
+2022/02/06-15:33:17.186 59b8 Archiving C:\Users\Usuario\nodeserver\WWebJS\session\Default\File System\Origins/000003.log: IO error: C:\Users\Usuario\nodeserver\WWebJS\session\Default\File System\Origins/000003.log: Could not rename file: File currently in use. (ChromeMethodBFE: 14::RenameFile::2)
+2022/02/06-15:33:17.187 59b8 Table #4: 285 entries OK
+2022/02/06-15:33:18.193 59b8 Archiving C:\Users\Usuario\nodeserver\WWebJS\session\Default\File System\Origins/MANIFEST-000001: IO error: C:\Users\Usuario\nodeserver\WWebJS\session\Default\File System\Origins/MANIFEST-000001: Could not rename file: File currently in use. (ChromeMethodBFE: 14::RenameFile::2)
