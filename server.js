@@ -100,16 +100,12 @@ function init(_email){
 		
 	stompClient.get(_email).connect({}, function (frame) {
 			
-		setTimeout(function(){
+		let _client = new Client({qrTimeoutMs:0});
 
-			let _client = new Client({qrTimeoutMs:0});
-
-			client.set(_email, _client);
+		client.set(_email, _client);
 		
-			initClient(_email);
-				
-		}, 1000);
-
+		initClient(_email);
+		
 	});
 		
 		
@@ -120,6 +116,7 @@ function initClient(_email){
 	
 	//init QRCode
 	let _qr = 1;
+	
 	client.get(_email).on('qr', qr => {
 		
 		console.log("qr: " + _email);
@@ -138,7 +135,9 @@ function initClient(_email){
 		
 		stompClient.get(_email).send("/app/chat/qr-" + _email, {},
 			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
+	
 	_qr++;
+	
 	});
 		
 	//when QRCode read
@@ -259,11 +258,16 @@ function initClient(_email){
 
 	});
 		
-	client.get(_email).initialize().catch(ex => {
+	setTimeout(function(){
+	
+		client.get(_email).initialize().catch(ex => {
 		
-		//left blank intentionally
+			//left blank intentionally
+			console.log(ex)
 		
-	});
+		});
+	
+	}, 1000);
 
 }
 
@@ -305,13 +309,13 @@ function sendMessage(_email, msg){
 			let number = msg.from.split("@")[0];
 				
 			pic = await getProfilePic(number, _email);
-			console.log(1);
+			
 			if (msg.hasMedia) {
 			
 				base64Image = await msg.downloadMedia();
 			
 			}
-			console.log(2);
+			
 		}catch(err){
 			
 			console.log(">>>ERROR_PIC<<< " + _email + " - " + msg.from);
@@ -407,7 +411,7 @@ async function logout(_email, qr){
 				}else{
 					
 					await client.get(_email).logout().catch(err => {
-				
+			
 						//left blank intentionally
 					
 					});
