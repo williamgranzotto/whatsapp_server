@@ -410,15 +410,15 @@ async function logout(_email, qr){
 		
 				if(qr){
 					
-					//client.get(_email).destroy();
+					client.get(_email).destroy();
 					
 				}else{
 					
-					//await client.get(_email).logout().catch(err => {
+					await client.get(_email).logout().catch(err => {
 			
 						//left blank intentionally
 					
-					//});
+					});
 				
 				}
 		
