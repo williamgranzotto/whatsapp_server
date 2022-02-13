@@ -43,6 +43,15 @@ app.use(function (req, res, next) {
     // Pass to next layer of middleware
     next();
 });
+
+// init application
+app.get('/', function (req, res) {
+	
+	//200 OK to prevent severe warning on aws
+	
+	res.status(200).end();
+	
+});
 	
 // init application
 app.post('/init', function (req, res) {
@@ -122,7 +131,7 @@ function initClient(_email){
 		console.log("qr: " + _email);
 		
 		if(_qr == 3){
-			//console.log(client.get(_email))
+			
 			stompClient.get(_email).send("/app/chat/refresh-" + _email, {},
 			JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'REFRESH', 
 			'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
