@@ -286,9 +286,9 @@ async function getProfilePic(number, _email){
 			return profilePicObj.eurl;
 				
         }else {
-					
-            console.log('>>>ERROR_This number hasn`t whatsapp<<<');
-                
+		
+			return null;
+		
 		}
 				
     });
@@ -370,9 +370,13 @@ async function loadCustomers(_email) {
 				
 			}
 	
-			contactsJson += "{'contact':{'pushname':'" + obj.pushname + "','number':'" + obj.number + "','isGroup':'" + obj.isGroup 
-			+ "','isWAContact':'"+ obj.isWAContact +  "','pic':'"+ pic + "'}},";
-	
+			if(pic != null){
+			
+				contactsJson += "{'contact':{'pushname':'" + obj.pushname + "','number':'" + obj.number + "','isGroup':'" + obj.isGroup 
+				+ "','isWAContact':'"+ obj.isWAContact +  "','pic':'"+ pic + "'}},";
+			
+			}
+			
 		}
 	
 		contactsJson = contactsJson.substring(0, contactsJson.length - 1);
