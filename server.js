@@ -166,7 +166,7 @@ function initClient(_email){
 		
 		let pic = null;
 		
-		if(info != undefined){
+		if(info != undefined && info.wid != undefined){
             
 			pic = await getProfilePic(info.wid.user, _email);
 				   
@@ -371,8 +371,12 @@ async function loadCustomers(_email) {
 			
 			try{
 			
-				pic = await getProfilePic(obj.id.user, _email);
-    
+				if(obj.id != undefined){
+				
+					pic = await getProfilePic(obj.id.user, _email);
+				
+				}
+			
 			}catch(err){
 				
 				console.log(">>>ERROR_PIC_LOADCUSTOMERS<<<")
