@@ -132,9 +132,17 @@ function initClient(_email){
 		
 		if(_qr == 3){
 			
-			stompClient.get(_email).send("/app/chat/refresh-" + _email, {},
-			JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'REFRESH', 
-			'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
+			try{
+				
+				stompClient.get(_email).send("/app/chat/refresh-" + _email, {},
+				JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'REFRESH', 
+				'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
+			
+			catch(err){
+				
+				//LEFT BLANK INTENTIONALLY
+				
+			}
 			
 			logout(_email, true);
 			
