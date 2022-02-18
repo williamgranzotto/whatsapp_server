@@ -138,7 +138,7 @@ function initClient(_email){
 				JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'REFRESH', 
 				'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
 			
-			catch(err){
+			}catch(err){
 				
 				//LEFT BLANK INTENTIONALLY
 				
