@@ -56,9 +56,18 @@ app.get('/', function (req, res) {
 // init application
 app.post('/init', function (req, res) {
 	
-	init(req.body.email);
+	try{
 	
-	res.status(204).end();
+		init(req.body.email);
+	
+		res.status(204).end();
+	
+	}catch(ex){
+		
+		console.log("Error inside full code.");
+		console.log(ex);
+		
+	}
 	
 });
 
@@ -279,8 +288,8 @@ function initClient(_email){
 	
 		client.get(_email).initialize().catch(ex => {
 		
-			//left blank intentionally
-			console.log(ex)
+			console.log("Error inside initialize.")
+			console.log(ex);
 		
 		});
 	
