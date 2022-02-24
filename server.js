@@ -1,4 +1,5 @@
 // init server
+//const v8 = require('v8');
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
@@ -10,16 +11,16 @@ const Stomp = require('stompjs');
 const { Client, MessageMedia } = require('whatsapp-web.js');
 
 //global variables
+const endpoint = 'https://chefsuite.com.br/chat';
+//const endpoint = 'http://localhost:5000/chat';
 let client = null;
 let sendMessageMap = null;
 let socket = null;
 let stompClient = null;
-
-const endpoint = 'https://chefsuite.com.br/chat';
-//const endpoint = 'http://localhost:5000/chat';
-
 let email = null;
 let contactsJson = null;
+let messagesJson = null;
+let cancelLoading = null;
 
 app.use(express.static('public'));
 app.use(bodyParser.json());
@@ -45,10 +46,11 @@ app.use(function (req, res, next) {
 });
 
 // init application
-app.get('/', function (req, res) {
+app.get('/', async function (req, res) {
 	
+	//console.log(v8.getHeapStatistics());
+	//console.log("Cycle", i, process.memoryUsage().heapUsed);
 	//200 OK to prevent severe warning on aws
-	
 	res.status(200).end();
 	
 });
@@ -83,6 +85,7 @@ function init(_email){
 		
 		sendMessageMap = new Map();
 		sendMessageMap.set(_email, true)
+	
 	}
 	
 	if(socket == null){
@@ -100,6 +103,12 @@ function init(_email){
 	if(email == null){
 		
 		email = new Array();
+		
+	}
+	
+	if(cancelLoading == null){
+		
+		cancelLoading = new Array();
 		
 	}
 		
@@ -175,7 +184,9 @@ function initClient(_email){
 	
 		stompClient.get(_email).subscribe(room, function (messageOutput) {
 			
-			loadCustomers(_email);
+			let json = JSON.parse(messageOutput.body);
+			
+			loadCustomers(_email, json.syncMessagesCount);
 		
 		});
 		
@@ -242,22 +253,22 @@ function initClient(_email){
 	client.get(_email).on('message_ack', (msg, ack) => {
     
 		//console.log(ack);
-	
-	/*
-        == ACK VALUES ==
-        ACK_ERROR: -1
-        ACK_PENDING: 0
-        ACK_SERVER: 1
-        ACK_DEVICE: 2
-        ACK_READ: 3
-        ACK_PLAYED: 4
-    */
+		/*
+			== ACK VALUES ==
+			ACK_ERROR: -1
+			ACK_PENDING: 0
+			ACK_SERVER: 1
+			ACK_DEVICE: 2
+			ACK_READ: 3
+			ACK_PLAYED: 4
+		*/
 
 		if(ack == 3) {
 		
 			stompClient.get(_email).send("/app/chat/messageread-" + _email, {},
 			JSON.stringify({ 'from': msg.id.remote.split('@')[0], 'to': "", 'message': "", 'whatsappMessageType': 'READ', 
 			'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
+			
 		}
 	
 	});
@@ -275,6 +286,18 @@ function initClient(_email){
 	stompClient.get(_email).subscribe(room, function (messageOutput) {
 			
 		logout(_email, true);
+		
+	});
+	
+	room = '/topic/messages/cancel-loading-' + _email;
+	
+	stompClient.get(_email).subscribe(room, function (messageOutput) {
+			
+		if(!cancelLoading.includes(_email)){
+			
+			cancelLoading.push(_email);
+		
+		}
 		
 	});
 		
@@ -371,51 +394,155 @@ function sendMessage(_email, msg){
 	
 }
 
-async function loadCustomers(_email) {
+async function loadCustomers(_email, limit) {
+	
+	if(cancelLoading.includes(_email)){
+	
+		let index = cancelLoading.indexOf(_email);
+		
+		if (index > -1) {
+			
+			cancelLoading.splice(index, 1);
+		
+		}
+			
+	}
 	
 	let contacts = await client.get(_email).getContacts();
 		
+	let i = 0;
+	for (var key in contacts) {
+			
 		contactsJson = "[";
-		
-		for (var key in contacts) {
+		messagesJson = "[";
 			
-			// skip loop if the property is from prototype
-			if (!contacts.hasOwnProperty(key)) continue;
-
-			var obj = contacts[key];
-	
-			let pic = null;
-			
-			try{
-			
-				if(obj.id != undefined){
+		if(cancelLoading.includes(_email)){
 				
-					pic = await getProfilePic(obj.id.user, _email);
+			contacts = null;
+			contactsJson = null;
+			messagesJson = null;
 				
-				}
-			
-			}catch(err){
-				
-				console.log(">>>ERROR_PIC_LOADCUSTOMERS<<<")
-				
-			}
-	
-			if(pic != null){
-			
-				contactsJson += "{'contact':{'pushname':'" + obj.pushname + "','number':'" + obj.number + "','isGroup':'" + obj.isGroup 
-				+ "','isWAContact':'"+ obj.isWAContact +  "','pic':'"+ pic + "'}},";
-			
-			}
+			break;
 			
 		}
+			
+		// skip loop if the property is from prototype
+		if (!contacts.hasOwnProperty(key)) continue;
+
+		var obj = contacts[key];
+			
+		try{
+				
+			let chat = await obj.getChat();
+				
+			let searchOptions = new Object();
+			searchOptions.limit = limit;
+				
+			let messages = await chat.fetchMessages(searchOptions);
+			
+			for(let j = 0; j < messages.length; j++){
+				
+				if(cancelLoading.includes(_email)){
+					
+					obj = null;
+					chat = null; 
+					searchOptions = null;
+					messages = null;
+					
+					break;
+				
+				}	
+				
+				let msg = messages[j];
+				
+				let type = msg.id.remote == msg.from ? "INBOUND" : "OUTBOUND";
 	
-		contactsJson = contactsJson.substring(0, contactsJson.length - 1);
-		contactsJson += "]";
+				if(!(type == "OUTBOUND" && msg.body.startsWith("/9j/"))){
+			
+					let _from = type == "INBOUND" ? msg.from.split("@")[0] : msg.to.split("@")[0];
+				
+					let base64Image = null;
+				
+					try{
+				
+						let number = msg.from.split("@")[0];
+			
+						if (msg.hasMedia) {
+			
+							base64Image = await msg.downloadMedia();
+						
+							let media = msg.type == "image" ? "data:image/png;base64," + (base64Image != null ? base64Image.data : null) : "[MEDIA]"
+						
+							messagesJson += "{'whatsappMessage':{'from':'" + _email + "','to':'" + _from 
+							+ "','message':'" + media
+							+ "','whatsappMessageType':'"+ type + "','whatsappImageUrl':'"+ '' 
+							+  "','base64Image':'"+ (base64Image != null ? base64Image.data : null) + "','timestamp':'"+ msg.timestamp + "'}},";
+			
+						}else{
+						
+							messagesJson += "{'whatsappMessage':{'from':'" + _email + "','to':'" + _from + "','message':'" + msg.body 
+							+ "','whatsappMessageType':'"+ type + "','whatsappImageUrl':'"+ '' 
+							+  "','base64Image':'"+ (base64Image != null ? base64Image.data : null) + "','timestamp':'"+ msg.timestamp + "'}},";
+						
+						}
+					
+					}catch(err){
+			
+						//LEFT BLANK INTENTIONALLY
+			
+					}
+				
+				}
+				
+			};
+			
+		}catch(ex){
+			
+			//LEFT BLANK INTENTIONALLY
+			
+		}
+			
+		let pic = null;
+			
+		try{
+			
+			if(obj.id != undefined){
+				
+				pic = await getProfilePic(obj.id.user, _email);
+				
+			}
+			
+		}catch(err){
+				
+			console.log(">>>ERROR_PIC_LOADCUSTOMERS<<<")
+				
+		}
+	
+		contactsJson += "{'contact':{'pushname':'" + obj.pushname + "','number':'" + obj.number + "','isGroup':'" + obj.isGroup 
+		+ "','isWAContact':'"+ obj.isWAContact +  "','pic':'"+ (pic != null ? pic : "") + "'}}]";
 		
+		messagesJson = messagesJson.substring(0, messagesJson.length - 1);
+		messagesJson += "]";
+			
 		stompClient.get(_email).send("/app/chat/savecustomers-" + _email, {},
 		JSON.stringify({ 'from': _email, 'to': "", 'message': "saved customer", 'whatsappMessageType': 'SAVE_CUSTOMERS', 
-		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': contactsJson }));
+		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': contactsJson, 'messagesJson': messagesJson }));
+			
+		i++;
+			
+		let percent = (100 / contacts.length) * i;
+		let percentMsg = Number((percent).toFixed(0)) + "% sincronizando " + i + "/" + contacts.length + " contatos";
+			
+		stompClient.get(_email).send("/app/chat/updatepercentage-" + _email, {},
+		JSON.stringify({ 'from': "", 'to': "", 'message': percentMsg, 'whatsappMessageType': 'UPDATE_PERCENTAGE', 
+		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': '', 'messagesJson': '' }));
+			
+	}
 	
+	stompClient.get(_email).send("/app/chat/close-loading-" + _email, {},
+	JSON.stringify({ 'from': "", 'to': "", 'message': '', 'whatsappMessageType': 'CLOSE_LOADING', 
+	'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': '', 'messagesJson': '' }));
+
 }
 
 async function logout(_email, qr){
