@@ -412,10 +412,7 @@ async function loadCustomers(_email, limit) {
 		
 	let i = 0;
 	for (var key in contacts) {
-			
-		contactsJson = "[";
-		messagesJson = "[";
-			
+		
 		if(cancelLoading.includes(_email)){
 				
 			contacts = null;
@@ -425,6 +422,9 @@ async function loadCustomers(_email, limit) {
 			break;
 			
 		}
+		
+		contactsJson = "[";
+		messagesJson = "[";
 			
 		// skip loop if the property is from prototype
 		if (!contacts.hasOwnProperty(key)) continue;
@@ -441,17 +441,6 @@ async function loadCustomers(_email, limit) {
 			let messages = await chat.fetchMessages(searchOptions);
 			
 			for(let j = 0; j < messages.length; j++){
-				
-				if(cancelLoading.includes(_email)){
-					
-					obj = null;
-					chat = null; 
-					searchOptions = null;
-					messages = null;
-					
-					break;
-				
-				}	
 				
 				let msg = messages[j];
 				
