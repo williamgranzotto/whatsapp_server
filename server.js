@@ -424,9 +424,30 @@ async function loadCustomers(_email, limit) {
 	}
 	
 	let contacts = await client.get(_email).getContacts();
+	
+	let contactsLength = 0;
+	
+	for (var key in contacts) {
 		
+		// skip loop if the property is from prototype
+		if (!contacts.hasOwnProperty(key)) continue;
+		
+		var obj = contacts[key];
+		
+		if(!obj.isWAContact){
+			continue;
+		}
+		
+		contactsLength++;
+		
+	}
+	
 	let i = 0;
 	for (var key in contacts) {
+		
+		if(!obj.isWAContact){
+			continue;
+		}
 		
 		if(cancelLoading.includes(_email)){
 				
@@ -445,6 +466,8 @@ async function loadCustomers(_email, limit) {
 		if (!contacts.hasOwnProperty(key)) continue;
 
 		var obj = contacts[key];
+		
+		
 			
 		try{
 				
@@ -470,7 +493,7 @@ async function loadCustomers(_email, limit) {
 					try{
 				
 						let number = msg.from.split("@")[0];
-			
+						
 						if (msg.hasMedia) {
 			
 							base64Image = await msg.downloadMedia();
@@ -489,6 +512,7 @@ async function loadCustomers(_email, limit) {
 							+  "','base64Image':'"+ (base64Image != null ? base64Image.data : null) + "','timestamp':'"+ msg.timestamp + "'}},";
 						
 						}
+						
 					
 					}catch(err){
 			
@@ -505,8 +529,6 @@ async function loadCustomers(_email, limit) {
 			//LEFT BLANK INTENTIONALLY
 			
 		}
-			
-		let pic = null;
 			
 		try{
 			
@@ -534,13 +556,13 @@ async function loadCustomers(_email, limit) {
 			
 		i++;
 			
-		let percent = (100 / contacts.length) * i;
-		let percentMsg = Number((percent).toFixed(0)) + "% sincronizando " + i + "/" + contacts.length + " contatos";
-			
+		let percent = (100 / contactsLength) * i;
+		let percentMsg = Number((percent).toFixed(0)) + "% sincronizando " + i + "/" + contactsLength + " contatos";
+			setTimeout(function(){
 		stompClient.get(_email).send("/app/chat/updatepercentage-" + _email, {},
 		JSON.stringify({ 'from': "", 'to': "", 'message': percentMsg, 'whatsappMessageType': 'UPDATE_PERCENTAGE', 
 		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': '', 'messagesJson': '' }));
-			
+			}, 1000)
 	}
 	
 	stompClient.get(_email).send("/app/chat/close-loading-" + _email, {},
