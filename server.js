@@ -115,9 +115,7 @@ function init(_email){
 	console.log("init: " + _email);
 	
 	//this line is to fix error of clear cache
-	logout(_email, false);
-		
-	console.log("!init includes:" + _email);
+	//logout(_email, false);
 	
 	email.push(_email);
 		
@@ -129,9 +127,13 @@ function init(_email){
 			
 		let _client = new Client({qrTimeoutMs:0});
 
-		client.set(_email, _client);
+		if(client.get(_email) == undefined){
+
+			client.set(_email, _client);
 		
-		initClient(_email);
+			initClient(_email);
+		
+		}
 		
 	});
 		
@@ -146,9 +148,14 @@ function initClient(_email){
 	
 	client.get(_email).on('qr', qr => {
 		
-		console.log("qr: " + _email);
+		console.log("qr", _qr, _email);
 		
-		if(_qr == 3){
+		if(_qr < 3){
+			
+			stompClient.get(_email).send("/app/chat/qr-" + _email, {},
+			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
+			
+		}else if(_qr == 3){
 			
 			try{
 				
@@ -164,14 +171,10 @@ function initClient(_email){
 			
 			logout(_email, true);
 			
-			return;
-			
 		}
 		
-		stompClient.get(_email).send("/app/chat/qr-" + _email, {},
-			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
-	
-	_qr++;
+		_qr++;
+		
 	
 	});
 		
@@ -326,14 +329,26 @@ async function getProfilePic(number, _email){
                 
 		if (id != null) {
                     
-			const profilePicObj = await client.get(_email).pupPage.evaluate((contactId) => {
-            
-				return window.Store.Wap.profilePicFind(contactId);
-				
-			}, id.user + '@' + id.server);
+			try{
 			
-			return profilePicObj.eurl;
+				const profilePicObj = await client.get(_email).pupPage.evaluate((contactId) => {
+            
+					return window.Store.Wap.profilePicFind(contactId);
 				
+				}, id.user + '@' + id.server);
+			
+				return profilePicObj.eurl;
+			
+			}catch(ex){
+						
+				if(ex.message == "Evaluation failed: g"){
+					
+					return null;
+					
+				}
+						
+			}
+			
         }else {
 		
 			return null;
