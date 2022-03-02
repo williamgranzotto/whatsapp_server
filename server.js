@@ -181,7 +181,37 @@ function initClient(_email){
 	//when QRCode read
 	client.get(_email).on('ready', async () => {
 		
-		console.log("ready: " + _email);
+		console.log("ready", _email)
+		
+		let info = await client.get(_email).info;
+		
+	    let _isMultiDevice = await isMultiDevice(info.wid.user, _email).then((result) => { 
+		
+			if(result){
+			
+				stompClient.get(_email).send("/app/chat/refresh-" + _email, {},
+				JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'REFRESH', 
+				'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
+			
+				return null;
+				
+			}
+		
+			return result;
+		
+		});
+		
+		if(_isMultiDevice == null){
+			
+			stompClient.get(_email).send("/app/chat/alert-" + _email, {},
+			JSON.stringify({ 'from': "", 'to': "", 'message': "Aviso!:O modo Múltiplos aparelhos do seu WhatsApp está ativado. Desative-o para se conectar.:warning", 'whatsappMessageType': 'REFRESH', 
+			'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
+			
+			await logout(_email, false);
+			
+			return;
+			
+		}
 		
 		let room = '/topic/messages/loadcustomers-' + _email;
 	
@@ -192,8 +222,6 @@ function initClient(_email){
 			loadCustomers(_email, json.syncMessagesCount);
 		
 		});
-		
-		let info = await client.get(_email).info;
 		
 		let pic = null;
 		
@@ -278,9 +306,9 @@ function initClient(_email){
 
 	room = '/topic/messages/logout-' + _email;
 	
-	stompClient.get(_email).subscribe(room, function (messageOutput) {
+	stompClient.get(_email).subscribe(room, async function (messageOutput) {
 			
-		logout(_email, false);
+		await logout(_email, false);
 		
 	});
 	
@@ -321,6 +349,36 @@ function initClient(_email){
 	
 	}, 1000);
 
+}
+
+async function isMultiDevice(number, _email){
+	
+	let result = await client.get(_email).getNumberId(number).then(async (id) => {
+                    
+		try{
+			
+			const profilePicObj = await client.get(_email).pupPage.evaluate((contactId) => {
+            
+				return window.Store.Wap.profilePicFind(contactId);
+				
+			}, id.user + '@' + id.server);
+				
+			return false;
+			
+		}catch(ex){
+			
+			if(ex.message == "Evaluation failed: g"){
+					
+				return true;
+					
+			}
+						
+		}
+				
+    });
+
+	return result;
+	
 }
 
 async function getProfilePic(number, _email){
