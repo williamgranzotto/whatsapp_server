@@ -320,6 +320,20 @@ function initClient(_email){
 		
 	});
 	
+	room = '/topic/messages/init-wa-loading-' + _email;
+	
+	stompClient.get(_email).subscribe(room, function (messageOutput) {
+			
+		let json = JSON.parse(messageOutput.body);
+			
+		//loadCustomers(_email, json.syncMessagesCount);
+		
+		stompClient.get(_email).send("/app/chat/loadcustomers-" + _email, {},
+		JSON.stringify({ 'from': _email, 'to': "", 'message': "LOAD_CUSTOMERS", 'whatsappMessageType': 'LOAD_CUSTOMERS', 
+		'syncMessagesCount': json.syncMessagesCount, 'whatsappPushname': "", 'contactsJson': '', 'messagesJson': ''}));
+		
+	});
+	
 	room = '/topic/messages/cancel-loading-' + _email;
 	
 	stompClient.get(_email).subscribe(room, function (messageOutput) {
