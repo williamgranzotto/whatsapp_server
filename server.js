@@ -332,9 +332,17 @@ function initClient(_email){
 		
 	});
 		
-	client.get(_email).on('disconnected', (reason) => {
+	client.get(_email).on('disconnected', async (reason) => {
    
 		console.log('Client was logged out', reason);
+		
+		if(reason == "CONFLICT"){
+			
+			//in this case show message for user alerting him session isn't available anymore. Most likely because he connected to another software.
+			
+			await logout(_email, false);
+			
+		}
 
 	});
 		
@@ -492,8 +500,18 @@ async function loadCustomers(_email, limit) {
 		
 		var obj = contacts[key];
 		
-		if(!obj.isWAContact){
+		if(!obj.isWAContact || obj.isGroup || obj.isBlocked){
+			
 			continue;
+		
+		}
+		
+		let chat = await obj.getChat();
+		
+		if(chat == null || chat.archived || chat.isReadOnly || chat.isMuted || chat.isGroup){
+		
+			continue;
+
 		}
 		
 		contactsLength++;
@@ -502,9 +520,16 @@ async function loadCustomers(_email, limit) {
 	
 	let i = 0;
 	for (var key in contacts) {
+
+		// skip loop if the property is from prototype
+		if (!contacts.hasOwnProperty(key)) continue;
+
+		var obj = contacts[key];
 		
-		if(!obj.isWAContact){
+		if(!obj.isWAContact || obj.isGroup || obj.isBlocked){
+			
 			continue;
+		
 		}
 		
 		if(cancelLoading.includes(_email)){
@@ -520,21 +545,30 @@ async function loadCustomers(_email, limit) {
 		contactsJson = "[";
 		messagesJson = "[";
 			
-		// skip loop if the property is from prototype
-		if (!contacts.hasOwnProperty(key)) continue;
-
-		var obj = contacts[key];
-		
-		
-			
 		try{
 				
 			let chat = await obj.getChat();
+			
+			if(chat == null || chat.archived || chat.isReadOnly || chat.isMuted || chat.isGroup){
+		
+				continue;
+
+			}	
 				
 			let searchOptions = new Object();
 			searchOptions.limit = limit;
 				
 			let messages = await chat.fetchMessages(searchOptions);
+			
+			if(messages.length == 0){
+				
+				i++;
+				
+				updatePercentage(contactsLength, i, _email)
+				
+				continue;
+				
+			}
 			
 			for(let j = 0; j < messages.length; j++){
 				
@@ -614,19 +648,26 @@ async function loadCustomers(_email, limit) {
 			
 		i++;
 			
-		let percent = (100 / contactsLength) * i;
-		let percentMsg = Number((percent).toFixed(0)) + "% sincronizando " + i + "/" + contactsLength + " contatos";
-			setTimeout(function(){
-		stompClient.get(_email).send("/app/chat/updatepercentage-" + _email, {},
-		JSON.stringify({ 'from': "", 'to': "", 'message': percentMsg, 'whatsappMessageType': 'UPDATE_PERCENTAGE', 
-		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': '', 'messagesJson': '' }));
-			}, 1000)
+		updatePercentage(contactsLength, i, _email)
+		
 	}
 	
 	stompClient.get(_email).send("/app/chat/close-loading-" + _email, {},
 	JSON.stringify({ 'from': "", 'to': "", 'message': '', 'whatsappMessageType': 'CLOSE_LOADING', 
 	'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': '', 'messagesJson': '' }));
 
+}
+
+function updatePercentage(contactsLength, i, _email){
+	
+	let percent = (100 / contactsLength) * i;
+		let percentMsg = Number((percent).toFixed(0)) + "% sincronizado";
+			setTimeout(function(){
+		stompClient.get(_email).send("/app/chat/updatepercentage-" + _email, {},
+		JSON.stringify({ 'from': "", 'to': "", 'message': percentMsg, 'whatsappMessageType': 'UPDATE_PERCENTAGE', 
+		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': '', 'messagesJson': '' }));
+			}, 1000)
+	
 }
 
 async function logout(_email, qr){
