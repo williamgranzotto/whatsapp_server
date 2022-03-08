@@ -127,6 +127,8 @@ function init(_email){
 			
 		let _client = new Client({qrTimeoutMs:0});
 
+		console.log("client", client.get(_email))
+
 		if(client.get(_email) == undefined){
 
 			client.set(_email, _client);
@@ -535,6 +537,16 @@ async function loadCustomers(_email, limit) {
 	let i = 0;
 	for (var key in contacts) {
 
+		if(cancelLoading.includes(_email)){
+				
+			contacts = null;
+			contactsJson = null;
+			messagesJson = null;
+				
+			break;
+			
+		}
+		
 		// skip loop if the property is from prototype
 		if (!contacts.hasOwnProperty(key)) continue;
 
@@ -544,16 +556,6 @@ async function loadCustomers(_email, limit) {
 			
 			continue;
 		
-		}
-		
-		if(cancelLoading.includes(_email)){
-				
-			contacts = null;
-			contactsJson = null;
-			messagesJson = null;
-				
-			break;
-			
 		}
 		
 		contactsJson = "[";
@@ -577,12 +579,14 @@ async function loadCustomers(_email, limit) {
 			if(messages.length == 0){
 				
 				i++;
-				
-				updatePercentage(contactsLength, i, _email)
-				
+			
+				updatePercentage(contactsLength, i, _email);
+			
 				continue;
 				
 			}
+			
+			updatePercentage(contactsLength, i, _email);
 			
 			for(let j = 0; j < messages.length; j++){
 				
@@ -602,9 +606,11 @@ async function loadCustomers(_email, limit) {
 						
 						if (msg.hasMedia) {
 			
-							base64Image = await msg.downloadMedia();
+							//base64Image = await msg.downloadMedia();
 						
-							let media = msg.type == "image" ? "data:image/png;base64," + (base64Image != null ? base64Image.data : null) : "[MEDIA]"
+							//let media = msg.type == "image" ? "data:image/png;base64," + (base64Image != null ? base64Image.data : null) : "[MEDIA]"
+						
+							let media = "[MEDIA]";
 						
 							messagesJson += "{'whatsappMessage':{'from':'" + _email + "','to':'" + _from 
 							+ "','message':'" + media
@@ -661,8 +667,6 @@ async function loadCustomers(_email, limit) {
 		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': contactsJson, 'messagesJson': messagesJson }));
 			
 		i++;
-			
-		updatePercentage(contactsLength, i, _email)
 		
 	}
 	
