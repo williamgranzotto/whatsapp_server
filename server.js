@@ -129,13 +129,13 @@ function init(_email){
 
 		console.log("client", client.get(_email))
 
-		if(client.get(_email) == undefined){
+		//if(client.get(_email) == undefined){
 
 			client.set(_email, _client);
 		
 			initClient(_email);
 		
-		}
+		//}
 		
 	});
 		
