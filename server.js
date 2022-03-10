@@ -127,19 +127,11 @@ function init(_email){
 			
 		let _client = new Client({qrTimeoutMs:0});
 
-		console.log("client", client.get(_email))
-
-		//if(client.get(_email) == undefined){
-
-			client.set(_email, _client);
+		client.set(_email, _client);
 		
-			initClient(_email);
-		
-		//}
+		initClient(_email);
 		
 	});
-		
-		
 	
 }
 
@@ -152,17 +144,21 @@ function initClient(_email){
 		
 		console.log("qr", _qr, _email);
 		
-		if(_qr < 3){
+		if(_qr < 2){
 			
 			stompClient.get(_email).send("/app/chat/qr-" + _email, {},
 			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
 			
-		}else if(_qr == 3){
+		}else if(_qr == 2){
 			
 			try{
 				
 				stompClient.get(_email).send("/app/chat/refresh-" + _email, {},
 				JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'REFRESH', 
+				'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
+			
+				stompClient.get(_email).send("/app/chat/alert-" + _email, {},
+				JSON.stringify({ 'from': "", 'to': "", 'message': "Aviso!:Caso não consiga conectar verifique se o modo múltiplos aparelhos está ativado. É preciso desativá-lo para se conectar.:info", 'whatsappMessageType': 'REFRESH', 
 				'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
 			
 			}catch(err){
@@ -179,6 +175,10 @@ function initClient(_email){
 		
 	
 	});
+	
+	client.get(_email).on('authenticated', () => {
+    
+	});
 		
 	//when QRCode read
 	client.get(_email).on('ready', async () => {
@@ -187,7 +187,7 @@ function initClient(_email){
 		
 		let info = await client.get(_email).info;
 		
-	    let _isMultiDevice = await isMultiDevice(info.wid.user, _email).then((result) => { 
+	    /*let _isMultiDevice = await isMultiDevice(info.wid.user, _email).then((result) => { 
 		
 			if(result){
 			
@@ -213,7 +213,7 @@ function initClient(_email){
 			
 			return;
 			
-		}
+		}*/
 		
 		let room = '/topic/messages/loadcustomers-' + _email;
 	
@@ -234,7 +234,7 @@ function initClient(_email){
 		}
 	
         let pushname = await client.get(_email).info.pushname;
-			
+		
 		stompClient.get(_email).send("/app/chat/ready-" + _email, {},
 		JSON.stringify({ 'from': _email, 'to': "", 'message': "", 'whatsappMessageType': 'READY', 
 		'whatsappImageUrl': pic, 'whatsappPushname': pushname, 'contactsJson': contactsJson }));
@@ -673,6 +673,10 @@ async function loadCustomers(_email, limit) {
 	stompClient.get(_email).send("/app/chat/close-loading-" + _email, {},
 	JSON.stringify({ 'from': "", 'to': "", 'message': '', 'whatsappMessageType': 'CLOSE_LOADING', 
 	'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': '', 'messagesJson': '' }));
+	
+	stompClient.get(_email).send("/app/chat/alert-" + _email, {},
+			JSON.stringify({ 'from': "", 'to': "", 'message': "Pronto!:Os seus contatos estão sincronizados.:info", 'whatsappMessageType': 'REFRESH', 
+			'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
 
 }
 
