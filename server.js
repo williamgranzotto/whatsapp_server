@@ -115,7 +115,11 @@ function init(_email){
 	console.log("init: " + _email);
 	
 	//this line is to fix error of clear cache
-	//logout(_email, false);
+	if(client.get(_email) != undefined){
+	
+		logout(_email, true);
+	
+	}
 	
 	email.push(_email);
 		
@@ -354,9 +358,11 @@ function initClient(_email){
 		
 		if(reason == "CONFLICT"){
 			
-			//in this case show message for user alerting him session isn't available anymore. Most likely because he connected to another software.
+			stompClient.get(_email).send("/app/chat/alert-" + _email, {},
+				JSON.stringify({ 'from': "", 'to': "", 'message': "Aviso!:Clique em \"Desconectar\" e conecte-se novamente para utilizar o Whatsapp Web.:warning", 'whatsappMessageType': 'REFRESH', 
+				'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
 			
-			await logout(_email, false);
+			logout(_email, true);
 			
 		}
 
@@ -535,6 +541,13 @@ async function loadCustomers(_email, limit) {
 	}
 	
 	let i = 0;
+	
+	let updatePercentageInterval = setInterval(function(){
+		
+		updatePercentage(contactsLength, i, _email);
+		
+	}, 3000);
+	
 	for (var key in contacts) {
 
 		if(cancelLoading.includes(_email)){
@@ -580,13 +593,9 @@ async function loadCustomers(_email, limit) {
 				
 				i++;
 			
-				updatePercentage(contactsLength, i, _email);
-			
 				continue;
 				
 			}
-			
-			updatePercentage(contactsLength, i, _email);
 			
 			for(let j = 0; j < messages.length; j++){
 				
@@ -670,13 +679,19 @@ async function loadCustomers(_email, limit) {
 		
 	}
 	
+	clearInterval(updatePercentageInterval);
+	
 	stompClient.get(_email).send("/app/chat/close-loading-" + _email, {},
 	JSON.stringify({ 'from': "", 'to': "", 'message': '', 'whatsappMessageType': 'CLOSE_LOADING', 
 	'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': '', 'messagesJson': '' }));
 	
-	stompClient.get(_email).send("/app/chat/alert-" + _email, {},
-			JSON.stringify({ 'from': "", 'to': "", 'message': "Pronto!:Os seus contatos estão sincronizados.:info", 'whatsappMessageType': 'REFRESH', 
-			'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
+	if(!cancelLoading.includes(_email)){
+		
+		stompClient.get(_email).send("/app/chat/alert-" + _email, {},
+		JSON.stringify({ 'from': "", 'to': "", 'message': "Pronto!:Os seus contatos estão sincronizados.:info", 'whatsappMessageType': 'REFRESH', 
+		'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
+			
+	}
 
 }
 
