@@ -148,21 +148,17 @@ function initClient(_email){
 		
 		console.log("qr", _qr, _email);
 		
-		if(_qr < 2){
+		if(_qr < 3){
 			
 			stompClient.get(_email).send("/app/chat/qr-" + _email, {},
 			JSON.stringify({ 'from': "", 'to': "", 'message': qr, 'whatsappMessageType': 'QRCODE' }));
 			
-		}else if(_qr == 2){
+		}else if(_qr == 3){
 			
 			try{
 				
 				stompClient.get(_email).send("/app/chat/refresh-" + _email, {},
 				JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'REFRESH', 
-				'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
-			
-				stompClient.get(_email).send("/app/chat/alert-" + _email, {},
-				JSON.stringify({ 'from': "", 'to': "", 'message': "Aviso!:Caso não consiga conectar verifique se o modo múltiplos aparelhos está ativado. É preciso desativá-lo para se conectar.:info", 'whatsappMessageType': 'REFRESH', 
 				'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
 			
 			}catch(err){
@@ -191,34 +187,6 @@ function initClient(_email){
 		
 		let info = await client.get(_email).info;
 		
-	    /*let _isMultiDevice = await isMultiDevice(info.wid.user, _email).then((result) => { 
-		
-			if(result){
-			
-				stompClient.get(_email).send("/app/chat/refresh-" + _email, {},
-				JSON.stringify({ 'from': "", 'to': "", 'message': "", 'whatsappMessageType': 'REFRESH', 
-				'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
-			
-				return null;
-				
-			}
-		
-			return result;
-		
-		});
-		
-		if(_isMultiDevice == null){
-			
-			stompClient.get(_email).send("/app/chat/alert-" + _email, {},
-			JSON.stringify({ 'from': "", 'to': "", 'message': "Aviso!:O modo Múltiplos aparelhos do seu WhatsApp está ativado. Desative-o para se conectar.:warning", 'whatsappMessageType': 'REFRESH', 
-			'whatsappImageUrl': '', 'whatsappPushname': '', 'contactsJson': '' }));
-			
-			await logout(_email, false);
-			
-			return;
-			
-		}*/
-		
 		let room = '/topic/messages/loadcustomers-' + _email;
 	
 		stompClient.get(_email).subscribe(room, function (messageOutput) {
@@ -233,11 +201,11 @@ function initClient(_email){
 		
 		if(info != undefined && info.wid != undefined){
             
-			pic = await getProfilePic(info.wid.user, _email);
+			pic = await client.get(_email).getProfilePicUrl(info.wid._serialized);
 				   
 		}
 	
-        let pushname = await client.get(_email).info.pushname;
+        let pushname = info.pushname;
 		
 		stompClient.get(_email).send("/app/chat/ready-" + _email, {},
 		JSON.stringify({ 'from': _email, 'to': "", 'message': "", 'whatsappMessageType': 'READY', 
@@ -381,74 +349,6 @@ function initClient(_email){
 
 }
 
-async function isMultiDevice(number, _email){
-	
-	let result = await client.get(_email).getNumberId(number).then(async (id) => {
-                    
-		try{
-			
-			const profilePicObj = await client.get(_email).pupPage.evaluate((contactId) => {
-            
-				return window.Store.Wap.profilePicFind(contactId);
-				
-			}, id.user + '@' + id.server);
-				
-			return false;
-			
-		}catch(ex){
-			
-			if(ex.message == "Evaluation failed: g"){
-					
-				return true;
-					
-			}
-						
-		}
-				
-    });
-
-	return result;
-	
-}
-
-async function getProfilePic(number, _email){
-	
-	let profilePic = await client.get(_email).getNumberId(number).then(async (id) => {
-                
-		if (id != null) {
-                    
-			try{
-			
-				const profilePicObj = await client.get(_email).pupPage.evaluate((contactId) => {
-            
-					return window.Store.Wap.profilePicFind(contactId);
-				
-				}, id.user + '@' + id.server);
-			
-				return profilePicObj.eurl;
-			
-			}catch(ex){
-						
-				if(ex.message == "Evaluation failed: g"){
-					
-					return null;
-					
-				}
-						
-			}
-			
-        }else {
-		
-			return null;
-		
-		}
-				
-    });
-
-	return profilePic;
-	
-}
-
 function sendMessage(_email, msg){
 	
 	let pic = null;
@@ -460,7 +360,7 @@ function sendMessage(_email, msg){
 				
 			let number = msg.from.split("@")[0];
 				
-			pic = await getProfilePic(number, _email);
+			pic = await client.get(_email).getProfilePicUrl(msg.from);
 			
 			if (msg.hasMedia) {
 			
@@ -515,12 +415,12 @@ async function loadCustomers(_email, limit) {
 	
 	let contactsLength = 0;
 	
-	for (var key in contacts) {
+	for (let w = 0; w < contacts.length; w++) {
 		
 		// skip loop if the property is from prototype
-		if (!contacts.hasOwnProperty(key)) continue;
+		//if (!contacts.hasOwnProperty(key)) continue;
 		
-		var obj = contacts[key];
+		var obj = contacts[w];
 		
 		if(!obj.isWAContact || obj.isGroup || obj.isBlocked){
 			
@@ -548,7 +448,7 @@ async function loadCustomers(_email, limit) {
 		
 	}, 3000);
 	
-	for (var key in contacts) {
+	for (let w = 0; w < contacts.length; w++) {
 
 		if(cancelLoading.includes(_email)){
 				
@@ -561,9 +461,9 @@ async function loadCustomers(_email, limit) {
 		}
 		
 		// skip loop if the property is from prototype
-		if (!contacts.hasOwnProperty(key)) continue;
+		//if (!contacts.hasOwnProperty(key)) continue;
 
-		var obj = contacts[key];
+		var obj = contacts[w];
 		
 		if(!obj.isWAContact || obj.isGroup || obj.isBlocked){
 			
@@ -655,7 +555,7 @@ async function loadCustomers(_email, limit) {
 			
 			if(obj.id != undefined){
 				
-				pic = await getProfilePic(obj.id.user, _email);
+				pic = await client.get(_email).getProfilePicUrl(obj.id._serialized);
 				
 			}
 			
@@ -665,7 +565,7 @@ async function loadCustomers(_email, limit) {
 				
 		}
 	
-		contactsJson += "{'contact':{'pushname':'" + obj.pushname + "','number':'" + obj.number + "','isGroup':'" + obj.isGroup 
+		contactsJson += "{'contact':{'pushname':'" + obj.name + "','number':'" + obj.number + "','isGroup':'" + obj.isGroup 
 		+ "','isWAContact':'"+ obj.isWAContact +  "','pic':'"+ (pic != null ? pic : "") + "'}}]";
 		
 		messagesJson = messagesJson.substring(0, messagesJson.length - 1);
@@ -700,9 +600,11 @@ function updatePercentage(contactsLength, i, _email){
 	let percent = (100 / contactsLength) * i;
 		let percentMsg = Number((percent).toFixed(0)) + "% sincronizado";
 			setTimeout(function(){
+				
 		stompClient.get(_email).send("/app/chat/updatepercentage-" + _email, {},
 		JSON.stringify({ 'from': "", 'to': "", 'message': percentMsg, 'whatsappMessageType': 'UPDATE_PERCENTAGE', 
 		'whatsappImageUrl': "", 'whatsappPushname': "", 'contactsJson': '', 'messagesJson': '' }));
+			
 			}, 1000)
 	
 }
