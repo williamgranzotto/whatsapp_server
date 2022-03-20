@@ -417,9 +417,6 @@ async function loadCustomers(_email, limit) {
 	
 	for (let w = 0; w < contacts.length; w++) {
 		
-		// skip loop if the property is from prototype
-		//if (!contacts.hasOwnProperty(key)) continue;
-		
 		var obj = contacts[w];
 		
 		if(!obj.isWAContact || obj.isGroup || obj.isBlocked){
@@ -460,9 +457,6 @@ async function loadCustomers(_email, limit) {
 			
 		}
 		
-		// skip loop if the property is from prototype
-		//if (!contacts.hasOwnProperty(key)) continue;
-
 		var obj = contacts[w];
 		
 		if(!obj.isWAContact || obj.isGroup || obj.isBlocked){
@@ -483,12 +477,23 @@ async function loadCustomers(_email, limit) {
 				continue;
 
 			}	
-				
+			
 			let searchOptions = new Object();
 			searchOptions.limit = limit;
-				
-			let messages = await chat.fetchMessages(searchOptions);
+	
+			let messages = await new Promise(async (resolve, reject) => {
 			
+			const timeoutId = setTimeout(() => {
+				
+				resolve(null)
+			
+			}, 10000) // wait 10 sec
+			
+    			resolve(await chat.fetchMessages(searchOptions))
+				clearTimeout(timeoutId)
+
+			})
+	
 			if(messages.length == 0){
 				
 				i++;
