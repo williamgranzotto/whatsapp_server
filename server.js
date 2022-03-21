@@ -522,9 +522,9 @@ async function loadCustomers(_email, limit) {
 			
 							//base64Image = await msg.downloadMedia();
 						
-							//let media = msg.type == "image" ? "data:image/png;base64," + (base64Image != null ? base64Image.data : null) : "[MEDIA]"
+							//let media = msg.type == "image" ? "data:image/png;base64," + (base64Image != null ? base64Image.data : null) : "[MÍDIA]"
 						
-							let media = "[MEDIA]";
+							let media = "[MÍDIA]";
 						
 							messagesJson += "{'whatsappMessage':{'from':'" + _email + "','to':'" + _from 
 							+ "','message':'" + media
