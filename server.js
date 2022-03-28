@@ -388,9 +388,11 @@ function sendMessage(_email, msg){
 			
 		let _from = type == "INBOUND" ? msg.from.split("@")[0] : msg.to.split("@")[0];
 			
+		let base64Audio = msg.type === 'ptt' && type === 'INBOUND' ? 'data:audio/wav;base64,' + base64Image.data : '';
+			
 		stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
 		JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
-		'whatsappImageUrl': pic , 'base64Image': base64Image != null ? base64Image.data : null}));
+		'whatsappImageUrl': pic , 'base64Image': base64Image != null ? base64Image.data : null, 'base64Audio': base64Audio}));
 
 		
 	}, 1000);
