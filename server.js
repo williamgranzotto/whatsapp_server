@@ -14,7 +14,7 @@ const { Client, MessageMedia } = require('whatsapp-web.js');
 const endpoint = 'https://chefsuite.com.br/chat';
 //const endpoint = 'http://localhost:5000/chat';
 let client = null;
-let sendMessageMap = null;
+//let sendMessageMap = null;
 let socket = null;
 let stompClient = null;
 let email = null;
@@ -81,12 +81,12 @@ function init(_email){
 		
 	}
 
-	if(sendMessageMap == null){
+	//if(sendMessageMap == null){
 		
-		sendMessageMap = new Map();
-		sendMessageMap.set(_email, true)
+		//sendMessageMap = new Map();
+		//sendMessageMap.set(_email, true)
 	
-	}
+	//}
 	
 	if(socket == null){
 		
@@ -220,7 +220,7 @@ function initClient(_email){
 			let number = json.to;
 			number = number.includes('@c.us') ? number : `${number}@c.us`;
 		
-			sendMessageMap.set(_email, false);
+			//sendMessageMap.set(_email, false);
 			
 			if(json.message.includes("base64,")){
 				
@@ -241,17 +241,17 @@ function initClient(_email){
 	//on message created
 	client.get(_email).on('message_create', async msg => {
 		
-		if(sendMessageMap.get(_email)){
+		//if(sendMessageMap.get(_email)){
 		
 			sendMessage(_email, msg);
 		
 			console.log("message created")
 		
-		}else{
+		//}else{
 			
-			sendMessageMap.set(_email, true);
+			//sendMessageMap.set(_email, true);
 			
-		}
+		//}
 		
 	});
 	
