@@ -669,6 +669,8 @@ async function logout(_email, qr){
 		if(email.includes(_email)){
 		
 			socket.delete(_email);
+			
+			socket.close();
 		
 			if(stompClient.get(_email) != null){
 		
