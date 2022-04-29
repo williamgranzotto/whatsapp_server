@@ -17,6 +17,7 @@ let client = null;
 //let sendMessageMap = null;
 let socket = null;
 let stompClient = null;
+let timerId = null;
 let email = null;
 let contactsJson = null;
 let messagesJson = null;
@@ -100,6 +101,12 @@ function init(_email){
 		
 	}
 	
+	if(timerId == null){
+		
+		timerId = new Map();
+		
+	}
+	
 	if(email == null){
 		
 		email = new Array();
@@ -135,9 +142,41 @@ function init(_email){
 		
 		initClient(_email);
 		
+		keepAlive(_email);
+		
+		socket.get(_email).onclose = function (e) {
+
+			cancelKeepAlive();
+
+		};
+		
 	});
 	
 }
+
+function keepAlive(_email) {
+
+    var timeout = 30000;
+
+    if (socket.get(_email).readyState == 1) {
+
+      socket.get(_email).send('');
+
+    }
+
+    timerId.set(_email, setTimeout(keepAlive, timeout, _email));
+
+  }
+
+function cancelKeepAlive(_email) {
+
+    if (timerId.get(_email)) {
+
+      clearTimeout(timerId.get(_email));
+
+    }
+
+  }
 
 function initClient(_email){
 	
