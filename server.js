@@ -670,7 +670,7 @@ async function logout(_email, qr){
 		
 			socket.delete(_email);
 			
-			socket.close();
+			socket.get(_email).close();
 		
 			if(stompClient.get(_email) != null){
 		
