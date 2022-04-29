@@ -668,10 +668,10 @@ async function logout(_email, qr){
 		
 		if(email.includes(_email)){
 		
-			socket.delete(_email);
-			
 			socket.get(_email).close();
 		
+			socket.delete(_email);
+			
 			if(stompClient.get(_email) != null){
 		
 				stompClient.get(_email).disconnect();
