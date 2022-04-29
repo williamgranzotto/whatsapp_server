@@ -158,7 +158,7 @@ function keepAlive(_email) {
 
     var timeout = 30000;
 
-    if (socket.get(_email).readyState == 1) {
+    if (socket.get(_email) !== undefined && socket.get(_email).readyState == 1) {
 
       socket.get(_email).send('');
 
