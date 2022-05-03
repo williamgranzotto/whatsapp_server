@@ -390,6 +390,12 @@ function initClient(_email){
 
 function sendMessage(_email, msg){
 	
+	if(msg.from === "status@broadcast"){
+		
+		return;
+		
+	}
+	
 	let pic = null;
 	let base64Image = null;
 		
