@@ -281,6 +281,13 @@ function initClient(_email){
 	client.get(_email).on('message_create', async msg => {
 		
 		//if(sendMessageMap.get(_email)){
+			
+			//When is in broadcast list then ignore. Broadcast list is used to send messages to several contacts at the same time.
+			if(msg.from === "status@broadcast"){
+		
+				return;
+		
+			}
 		
 			sendMessage(_email, msg);
 		
@@ -389,12 +396,6 @@ function initClient(_email){
 }
 
 function sendMessage(_email, msg){
-	
-	if(msg.from === "status@broadcast"){
-		
-		return;
-		
-	}
 	
 	let pic = null;
 	let base64Image = null;
