@@ -9,7 +9,6 @@ const Stomp = require('stompjs');
 //init whatsapp web
 //const qrcode = require('qrcode-terminal');
 const { Client, MessageMedia } = require('whatsapp-web.js');
-
 //global variables
 const endpoint = 'https://contachefe.com/chat';
 //const endpoint = 'http://localhost:5000/chat';
