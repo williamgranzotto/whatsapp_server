@@ -16,7 +16,6 @@
     "npm": "^8.13.1",
     "puppeteer": "^15.1.1",
     "qrcode-terminal": "^0.12.0",
-    "sharp": "^0.30.7",
     "sockjs-client": "^1.5.1",
     "stompjs": "^2.3.3",
     "whatsapp-web.js": "^1.17.0",
