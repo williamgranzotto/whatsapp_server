@@ -11,7 +11,7 @@ const Stomp = require('stompjs');
 const { Client, MessageMedia } = require('whatsapp-web.js');
 
 //global variables
-const endpoint = 'https://chefsuite.com.br/chat';
+const endpoint = 'https://contachefe.com/chat';
 //const endpoint = 'http://localhost:5000/chat';
 let client = null;
 //let sendMessageMap = null;
