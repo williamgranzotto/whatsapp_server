@@ -398,20 +398,23 @@ function sendMessage(_email, msg){
 	
 	let pic = null;
 	let base64Image = null;
+	let millis = 1;
 		
 	(async () => {
 			
 		try{
 				
-			let number = msg.from.split("@")[0];
-				
-			pic = await client.get(_email).getProfilePicUrl(msg.from);
-			
 			if (msg.hasMedia) {
+			
+				millis = 1000;
 			
 				base64Image = await msg.downloadMedia();
 			
 			}
+				
+			let number = msg.from.split("@")[0];
+			
+			pic = await client.get(_email).getProfilePicUrl(msg.from);
 			
 		}catch(err){
 			
@@ -420,7 +423,7 @@ function sendMessage(_email, msg){
 		}
 		
     })();
-    
+	
 	setTimeout(function(){
 			
 		let type = msg.id.remote == msg.from ? "INBOUND" : "OUTBOUND";
@@ -433,7 +436,7 @@ function sendMessage(_email, msg){
 			
 		let _from = type == "INBOUND" ? msg.from.split("@")[0] : msg.to.split("@")[0];
 			
-		let base64Audio = msg.type === 'ptt' && type === 'INBOUND' ? 'data:audio/wav;base64,' + base64Image.data : '';
+		let base64Audio = msg.type === 'ptt' ? 'data:audio/wav;base64,' + base64Image.data : '';
 			
 		let _pic = type == "INBOUND" ? pic : null;
 		
@@ -441,7 +444,7 @@ function sendMessage(_email, msg){
 		JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
 		'whatsappImageUrl': _pic , 'base64Image': base64Image != null ? base64Image.data : null, 'base64Audio': base64Audio}));
 		
-	}, 1000);
+	}, millis);
 	
 }
 
