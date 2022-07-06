@@ -9,6 +9,7 @@ const Stomp = require('stompjs');
 //init whatsapp web
 //const qrcode = require('qrcode-terminal');
 const { Client, MessageMedia } = require('whatsapp-web.js');
+
 //global variables
 const endpoint = 'https://contachefe.com/chat';
 //const endpoint = 'http://localhost:5000/chat';
@@ -397,25 +398,50 @@ function initClient(_email){
 function sendMessage(_email, msg){
 	
 	let pic = null;
-	let base64Image = null;
-	let millis = 1;
 		
 	(async () => {
 			
 		try{
 				
-			if (msg.hasMedia) {
+			let type = msg.id.remote == msg.from ? "INBOUND" : "OUTBOUND";
+	
+			if(type == "OUTBOUND" && msg.body.startsWith("/9j/")){
 			
-				millis = 1000;
-			
-				base64Image = await msg.downloadMedia();
+				return;
 			
 			}
-				
+			
 			let number = msg.from.split("@")[0];
 			
 			pic = await client.get(_email).getProfilePicUrl(msg.from);
+		
+			let _from = type == "INBOUND" ? msg.from.split("@")[0] : msg.to.split("@")[0];
+				
+			if (msg.hasMedia) {
 			
+				await msg.downloadMedia().then((data) =>{
+		
+					let base64 = 'data:' + data.mimetype + ';base64,' + data.data;
+			
+					let _pic = type == "INBOUND" ? pic : null;
+		
+					stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
+					JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
+					'whatsappImageUrl': _pic , 'base64Image': base64.includes("image/") ? base64 : null, 
+					'base64Audio': base64.includes("audio/") ? base64 : null, 'base64Video': base64.includes("video/") ? base64 : null}));
+					
+				});
+			
+			}else{
+			
+				let _pic = type == "INBOUND" ? pic : null;
+		
+				stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
+				JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
+				'whatsappImageUrl': _pic , 'base64Image':  null, 'base64Audio': null, 'base64Video': null}));
+				
+			}
+				
 		}catch(err){
 			
 			console.log(">>>ERROR_PIC<<< " + _email + " - " + msg.from);
@@ -423,28 +449,6 @@ function sendMessage(_email, msg){
 		}
 		
     })();
-	
-	setTimeout(function(){
-			
-		let type = msg.id.remote == msg.from ? "INBOUND" : "OUTBOUND";
-	
-		if(type == "OUTBOUND" && msg.body.startsWith("/9j/")){
-			
-			return;
-			
-		}
-			
-		let _from = type == "INBOUND" ? msg.from.split("@")[0] : msg.to.split("@")[0];
-			
-		let base64Audio = msg.type === 'ptt' ? 'data:audio/wav;base64,' + base64Image.data : '';
-			
-		let _pic = type == "INBOUND" ? pic : null;
-		
-		stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
-		JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
-		'whatsappImageUrl': _pic , 'base64Image': base64Image != null ? base64Image.data : null, 'base64Audio': base64Audio}));
-		
-	}, millis);
 	
 }
 
