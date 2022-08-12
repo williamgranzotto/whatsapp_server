@@ -288,7 +288,7 @@ function initClient(_email){
 				return;
 		
 			}
-		
+			
 			sendMessage(_email, msg);
 		
 			console.log("message created")
@@ -426,7 +426,10 @@ function sendMessage(_email, msg){
 					let _pic = type == "INBOUND" ? pic : null;
 		
 					stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
-					JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
+					JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 
+					'quotedMsg': JSON.stringify(msg._data.quotedMsg), 
+				    'quotedParticipant': msg._data.quotedParticipant != undefined ? msg._data.quotedParticipant.split("@")[0] : '',
+					'whatsappMessageType': type, 
 					'whatsappImageUrl': _pic , 'base64Image': base64.includes("image/") ? base64 : null, 
 					'base64Audio': base64.includes("audio/") ? base64 : null, 'base64Video': base64.includes("video/") ? base64 : null}));
 					
@@ -435,9 +438,12 @@ function sendMessage(_email, msg){
 			}else{
 			
 				let _pic = type == "INBOUND" ? pic : null;
-		
+				
 				stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
-				JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 'whatsappMessageType': type, 
+				JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 
+				'quotedMsg': JSON.stringify(msg._data.quotedMsg), 
+				'quotedParticipant': msg._data.quotedParticipant != undefined ? msg._data.quotedParticipant.split("@")[0] : '',
+				'whatsappMessageType': type, 
 				'whatsappImageUrl': _pic , 'base64Image':  null, 'base64Audio': null, 'base64Video': null}));
 				
 			}
