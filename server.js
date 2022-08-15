@@ -581,26 +581,35 @@ async function loadCustomers(_email, limit) {
 						
 						if (msg.hasMedia) {
 			
-							//base64Image = await msg.downloadMedia();
-						
-							//let media = msg.type == "image" ? "data:image/png;base64," + (base64Image != null ? base64Image.data : null) : "[MÍDIA]"
-						
-							let media = "[MÍDIA]";
-						
-							messagesJson += "{'whatsappMessage':{'from':'" + _email + "','to':'" + _from 
-							+ "','message':'" + media
-							+ "','whatsappMessageType':'"+ type + "','whatsappImageUrl':'"+ '' 
-							+  "','base64Image':'"+ (base64Image != null ? base64Image.data : null) + "','timestamp':'"+ msg.timestamp + "'}},";
+							await msg.downloadMedia().then((data) =>{
+		
+								let base64 = 'data:' + data.mimetype + ';base64,' + data.data;
+			
+								let _pic = type == "INBOUND" ? pic : null;
+		
+								stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
+								JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 
+								'quotedMsg': JSON.stringify(msg._data.quotedMsg), 
+								'quotedParticipant': msg._data.quotedParticipant != undefined ? msg._data.quotedParticipant.split("@")[0] : '',
+								'whatsappMessageType': type, 
+								'whatsappImageUrl': _pic , 'base64Image': base64.includes("image/") ? base64 : null, 
+								'base64Audio': base64.includes("audio/") ? base64 : null, 'base64Video': base64.includes("video/") ? base64 : null}));
+					
+							});
 			
 						}else{
-						
-							messagesJson += "{'whatsappMessage':{'from':'" + _email + "','to':'" + _from + "','message':'" + msg.body 
-							+ "','whatsappMessageType':'"+ type + "','whatsappImageUrl':'"+ '' 
-							+  "','base64Image':'"+ (base64Image != null ? base64Image.data : null) + "','timestamp':'"+ msg.timestamp + "'}},";
-						
+			
+							let _pic = type == "INBOUND" ? pic : null;
+				
+							stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
+							JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 
+							'quotedMsg': JSON.stringify(msg._data.quotedMsg), 
+							'quotedParticipant': msg._data.quotedParticipant != undefined ? msg._data.quotedParticipant.split("@")[0] : '',
+							'whatsappMessageType': type, 
+							'whatsappImageUrl': _pic , 'base64Image':  null, 'base64Audio': null, 'base64Video': null}));
+				
 						}
 						
-					
 					}catch(err){
 			
 						//LEFT BLANK INTENTIONALLY
