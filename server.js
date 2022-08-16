@@ -365,6 +365,22 @@ function initClient(_email){
 		}
 		
 	});
+	
+	client.get(_email).on('message_revoke_everyone', async (after, before) => {
+		
+		if (before) {
+			
+			let type = before.id.remote == before.from ? "INBOUND" : "OUTBOUND";
+			
+			let _from = type == "INBOUND" ? before.from.split("@")[0] : before.to.split("@")[0];
+		
+		    stompClient.get(_email).send("/app/chat/revoke-" + _email, {},
+		    JSON.stringify({'from': _email, 'to': _from, 'messageId': before.id.id, 
+		    'whatsappMessageType': 'REVOKE', 'timestamp': before._data.t}));
+		
+		}
+		
+	});
 		
 	client.get(_email).on('disconnected', async (reason) => {
    
@@ -431,7 +447,8 @@ function sendMessage(_email, msg){
 				    'quotedParticipant': msg._data.quotedParticipant != undefined ? msg._data.quotedParticipant.split("@")[0] : '',
 					'whatsappMessageType': type, 
 					'whatsappImageUrl': _pic , 'base64Image': base64.includes("image/") ? base64 : null, 
-					'base64Audio': base64.includes("audio/") ? base64 : null, 'base64Video': base64.includes("video/") ? base64 : null}));
+					'base64Audio': base64.includes("audio/") ? base64 : null, 'base64Video': base64.includes("video/") ? base64 : null,
+					'messageId': msg.id.id, 'timestamp': msg._data.t}));
 					
 				});
 			
@@ -444,9 +461,12 @@ function sendMessage(_email, msg){
 				'quotedMsg': JSON.stringify(msg._data.quotedMsg), 
 				'quotedParticipant': msg._data.quotedParticipant != undefined ? msg._data.quotedParticipant.split("@")[0] : '',
 				'whatsappMessageType': type, 
-				'whatsappImageUrl': _pic , 'base64Image':  null, 'base64Audio': null, 'base64Video': null}));
+				'whatsappImageUrl': _pic , 'base64Image':  null, 'base64Audio': null, 'base64Video': null,
+				'messageId': msg.id.id, 'timestamp': msg._data.t}));
 				
 			}
+			
+			console.log(msg);
 				
 		}catch(err){
 			
@@ -587,13 +607,17 @@ async function loadCustomers(_email, limit) {
 			
 								let _pic = type == "INBOUND" ? pic : null;
 		
-								stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
-								JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 
+								messagesJson +=
+								
+								JSON.stringify({'whatsappMessage':{ 'from': _email, 'to': _from, 'message': msg.body, 
 								'quotedMsg': JSON.stringify(msg._data.quotedMsg), 
 								'quotedParticipant': msg._data.quotedParticipant != undefined ? msg._data.quotedParticipant.split("@")[0] : '',
 								'whatsappMessageType': type, 
 								'whatsappImageUrl': _pic , 'base64Image': base64.includes("image/") ? base64 : null, 
-								'base64Audio': base64.includes("audio/") ? base64 : null, 'base64Video': base64.includes("video/") ? base64 : null}));
+								'base64Audio': base64.includes("audio/") ? base64 : null, 'base64Video': base64.includes("video/") ? base64 : null,
+								'timestamp': msg._data.t, 'type': msg.type, 'messageId': msg.id.id}});
+					
+								messagesJson += ",";
 					
 							});
 			
@@ -601,14 +625,20 @@ async function loadCustomers(_email, limit) {
 			
 							let _pic = type == "INBOUND" ? pic : null;
 				
-							stompClient.get(_email).send("/app/chat/sendmessage-" + _email, {},
-							JSON.stringify({ 'from': _email, 'to': _from, 'message': msg.body, 
+							messagesJson +=
+							
+							JSON.stringify({'whatsappMessage':{ 'from': _email, 'to': _from, 'message': msg.body, 
 							'quotedMsg': JSON.stringify(msg._data.quotedMsg), 
 							'quotedParticipant': msg._data.quotedParticipant != undefined ? msg._data.quotedParticipant.split("@")[0] : '',
 							'whatsappMessageType': type, 
-							'whatsappImageUrl': _pic , 'base64Image':  null, 'base64Audio': null, 'base64Video': null}));
+							'whatsappImageUrl': _pic , 'base64Image':  null, 'base64Audio': null, 'base64Video': null,
+							'timestamp': msg._data.t, 'type': msg.type, 'messageId': msg.id.id}});
+							
+							messagesJson += ",";
 				
 						}
+						
+						console.log(msg);
 						
 					}catch(err){
 			
