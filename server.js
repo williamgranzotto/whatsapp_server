@@ -465,8 +465,6 @@ function sendMessage(_email, msg){
 				'messageId': msg.id.id, 'timestamp': msg._data.t}));
 				
 			}
-			
-			console.log(msg);
 				
 		}catch(err){
 			
@@ -637,8 +635,6 @@ async function loadCustomers(_email, limit) {
 							messagesJson += ",";
 				
 						}
-						
-						console.log(msg);
 						
 					}catch(err){
 			
